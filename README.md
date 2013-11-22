@@ -10,19 +10,24 @@ Just [KISS](http://en.wikipedia.org/wiki/KISS_principle).
 
 Just [KISS](http://en.wikipedia.org/wiki/KISS_principle) (again, it's boring?)
 
-1. Add this to your pom.xml file :
+<ol>
+<li>Add this to your pom.xml file :
 
-<dependency>
-  <groupId>com.vaushell.shaarli-java-api</groupId>
-  <artifactId>shaarli-java-api</artifactId>
-  <version>1.0.0</version>
-</dependency>
+<pre>
+&lt;dependency&gt;
+  &lt;groupId&gt;com.vaushell.shaarli-java-api&lt;/groupId&gt;
+  &lt;artifactId&gt;shaarli-java-api&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;
+</pre>
+</li>
 
-2. See examples at : Examples.java 
+<li>See examples <a href="https://github.com/fabienvauchelles/shaarli-java-api/blob/master/shaarli-java-api/src/test/java/com/vaushell/shaarlijavaapi/Examples.java">here</a>.</li>
 
-3. Do it in your code !
+<li>Do it in your code !</li>
+</ol>
 
 ## Licence
 
-See LICENCE.txt
+See [LICENCE.txt](https://github.com/fabienvauchelles/shaarli-java-api/blob/master/LICENCE.txt).
 
