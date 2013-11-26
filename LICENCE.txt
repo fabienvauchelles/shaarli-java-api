@@ -1,4 +1,4 @@
-shaarli-java-api is a java client for Sebsauvage's Shaarli.
+shaarli-java-api is a java client api for Sebsauvage's Shaarli.
 
 Copyright (C) 2013 - Fabien VAUCHELLES - fabien AT vauchelles DOT com
 

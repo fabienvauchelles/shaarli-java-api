@@ -1,6 +1,6 @@
 # shaarli-java-api
 
-shaarli-java-api is a java client for Sebsauvage's [Shaarli](http://sebsauvage.net/wiki/doku.php?id=php:shaarli).
+shaarli-java-api is a java client api for Sebsauvage's [Shaarli](http://sebsauvage.net/wiki/doku.php?id=php:shaarli).
 
 ## Why use shaarli ?
 
