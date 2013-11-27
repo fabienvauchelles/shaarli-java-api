@@ -38,7 +38,7 @@ You can :
 </pre>
 </li>
 
-<li>See this tutorial You can find a tutorial <a href="http://fabien.vauchelles.com/shaarli-java-api">here</a> (in french) ;</li>
+<li>See this tutorial <a href="http://fabien.vauchelles.com/shaarli-java-api">here</a> (in french) ;</li>
 <li>See example file <a href="https://github.com/fabienvauchelles/shaarli-java-api/blob/master/shaarli-java-api/src/test/java/com/vaushell/shaarlijavaapi/Examples.java">here</a> ;</li>
 <li>Do it in your code !</li>
 </ol>
