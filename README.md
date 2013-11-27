@@ -27,6 +27,18 @@ Just [KISS](http://en.wikipedia.org/wiki/KISS_principle) (again, it's boring?)
 <li>Do it in your code !</li>
 </ol>
 
+## Which features can i use ?
+
+You can :
+<ul>
+<li>Iterate all posts ;</li>
+<li>Iterate posts by multiple tags ;</li>
+<li>Iterate posts by a term ;</li>
+<li>Add a new post ;</li>
+<li>Modify an existing post ;</li>
+<li>Delete an existing post.</li>
+</ul>
+
 ## Licence
 
 See [LICENCE.txt](https://github.com/fabienvauchelles/shaarli-java-api/blob/master/LICENCE.txt).
