@@ -65,11 +65,15 @@ public class Examples
                                                    "Du coooodde rahhh::!!!!!" ,
                                                    tags ,
                                                    false );
+            if ( id == null )
+            {
+                throw new IOException( "Cannot create link. See error log" );
+            }
 
             // Modify a link
             client.createOrUpdateLink( id ,
                                        "http://fabien.vauchelles.com/" ,
-                                       "Blog de Fabien" ,
+                                       "Blég de Fabien" ,
                                        "Encore du code :)" ,
                                        tags ,
                                        false );

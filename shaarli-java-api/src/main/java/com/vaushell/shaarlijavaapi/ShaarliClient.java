@@ -296,7 +296,8 @@ public class ShaarliClient
             nvps.add( new BasicNameValuePair( "returnurl" ,
                                               endpoint ) );
 
-            post.setEntity( new UrlEncodedFormEntity( nvps ) );
+            post.setEntity( new UrlEncodedFormEntity( nvps ,
+                                                      "UTF-8" ) );
 
             HttpResponse response = client.execute( post );
             responseEntity = response.getEntity();
@@ -382,7 +383,8 @@ public class ShaarliClient
             nvps.add( new BasicNameValuePair( "token" ,
                                               token ) );
 
-            post.setEntity( new UrlEncodedFormEntity( nvps ) );
+            post.setEntity( new UrlEncodedFormEntity( nvps ,
+                                                      "UTF-8" ) );
 
             HttpResponse response = client.execute( post );
             responseEntity = response.getEntity();
@@ -827,7 +829,8 @@ public class ShaarliClient
                                               token ) );
             nvps.add( new BasicNameValuePair( "returnurl" ,
                                               endpoint ) );
-            post.setEntity( new UrlEncodedFormEntity( nvps ) );
+            post.setEntity( new UrlEncodedFormEntity( nvps ,
+                                                      "UTF-8" ) );
 
             HttpResponse response = client.execute( post );
             responseEntity = response.getEntity();
