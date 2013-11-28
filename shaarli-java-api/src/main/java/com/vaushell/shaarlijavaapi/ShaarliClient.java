@@ -448,7 +448,7 @@ public class ShaarliClient
             {
                 try( InputStream is = responseEntity.getContent() )
                 {
-                    Map<String , Integer> tags = new TreeMap<String , Integer>();
+                    Map<String , Integer> tags = new TreeMap<>();
 
                     Document doc = Jsoup.parse( is ,
                                                 "utf-8" ,
