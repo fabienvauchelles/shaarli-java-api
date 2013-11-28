@@ -12,9 +12,12 @@ import java.util.TreeSet;
  */
 public class Examples
 {
-    private final static String LOGIN = "MY_LOGIN";
-    private final static String PASSWORD = "MY_PASSWORD";
-    private final static String ENDPOINT = "http://fabien.vauchelles.com/~fabien/shaarli";
+//    private final static String LOGIN = "MY_LOGIN";
+//    private final static String PASSWORD = "MY_PASSWORD";
+//    private final static String ENDPOINT = "http://fabien.vauchelles.com/~fabien/shaarli";
+    private final static String LOGIN = "s";
+    private final static String PASSWORD = "s";
+    private final static String ENDPOINT = "http://localhost/~torus/s/";
 
     public static void main( String[] args )
             throws Exception
@@ -25,9 +28,15 @@ public class Examples
 
         searchAllExample();
 
+        searchAllPage1example();
+
         searchTermExample();
 
+        searchTermPage1example();
+
         searchTagsExample();
+
+        searchTagsPage1Example();
     }
 
     /**
@@ -154,6 +163,49 @@ public class Examples
     }
 
     /**
+     * Show how we get all links on page 1
+     *
+     * @throws IOException
+     */
+    private static void searchAllPage1example()
+            throws IOException
+    {
+        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        {
+            if ( !client.login( LOGIN ,
+                                PASSWORD ) )
+            {
+                throw new IOException( "Login error" );
+            }
+
+            // Name tags
+            TreeSet<String> tags = new TreeSet<>();
+            tags.add( "java" );
+            tags.add( "coding" );
+
+            // Create 10 links
+            for ( int i = 0 ; i < 10 ; ++i )
+            {
+                client.createOrUpdateLink( "monid" + i ,
+                                           "http://fabien.vauchelles.com/" + i ,
+                                           "Blog de Fabien Vauchelles n°" + i ,
+                                           "Du coooodde rahhh::!!!!! #" + i ,
+                                           tags ,
+                                           false );
+            }
+
+            // Show only 2 links by page
+            client.setLinksByPage( 2 );
+
+            // Iterate all links (without restriction)
+            for ( ShaarliLink link : client.searchAll( 1 ) )
+            {
+                System.out.println( link );
+            }
+        }
+    }
+
+    /**
      * Show how we use a term filter
      *
      * @throws IOException
@@ -190,6 +242,49 @@ public class Examples
             {
                 ShaarliLink link = iterator.next();
 
+                System.out.println( link );
+            }
+        }
+    }
+
+    /**
+     * Show how we use a term filter and get page 1
+     *
+     * @throws IOException
+     */
+    private static void searchTermPage1example()
+            throws IOException
+    {
+        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        {
+            if ( !client.login( LOGIN ,
+                                PASSWORD ) )
+            {
+                throw new IOException( "Login error" );
+            }
+
+            // Create 10 links
+            for ( int i = 0 ; i < 10 ; ++i )
+            {
+                TreeSet<String> tags = new TreeSet<>();
+                tags.add( "java" + i );
+                tags.add( "coding" );
+
+                client.createOrUpdateLink( "monid" + i ,
+                                           "http://fabien.vauchelles.com/" + i ,
+                                           "Blog de Fabien Vauchelles n°" + i ,
+                                           "Du coooodde rahhh::!!!!! #" + i ,
+                                           tags ,
+                                           false );
+            }
+
+            // Show only 2 links by page
+            client.setLinksByPage( 2 );
+
+            // Iterate all links (without restriction)
+            for ( ShaarliLink link : client.searchTerm( 1 ,
+                                                        "Blog" ) )
+            {
                 System.out.println( link );
             }
         }
@@ -233,6 +328,50 @@ public class Examples
             {
                 ShaarliLink link = iterator.next();
 
+                System.out.println( link );
+            }
+        }
+    }
+
+    /**
+     * Show how we use a tags filter and get page 1
+     *
+     * @throws IOException
+     */
+    private static void searchTagsPage1Example()
+            throws IOException
+    {
+        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        {
+            if ( !client.login( LOGIN ,
+                                PASSWORD ) )
+            {
+                throw new IOException( "Login error" );
+            }
+
+            // Create 10 links
+            for ( int i = 0 ; i < 10 ; ++i )
+            {
+                TreeSet<String> tags = new TreeSet<>();
+                tags.add( "java" + i );
+                tags.add( "coding" );
+
+                client.createOrUpdateLink( "monid" + i ,
+                                           "http://fabien.vauchelles.com/" + i ,
+                                           "Blog de Fabien Vauchelles n°" + i ,
+                                           "Du coooodde rahhh::!!!!! #" + i ,
+                                           tags ,
+                                           false );
+            }
+
+            // Show only 2 links by page
+            client.setLinksByPage( 2 );
+
+            // Iterate all links (without restriction)
+            for ( ShaarliLink link : client.searchTags( 1 ,
+                                                        "coding" ,
+                                                        "java2" ) )
+            {
                 System.out.println( link );
             }
         }

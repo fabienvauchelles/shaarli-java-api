@@ -512,6 +512,30 @@ public class ShaarliClient
     }
 
     /**
+     * Get all page's links
+     *
+     * @param page Page number (>=1)
+     * @return List of links
+     */
+    public List<ShaarliLink> searchAll( int page )
+    {
+        if ( page < 1 )
+        {
+            throw new IllegalArgumentException( "page must be greater or equals to 1" );
+        }
+
+        if ( logger.isDebugEnabled() )
+        {
+            logger.debug(
+                    "[" + getClass().getSimpleName() + "] searchAll() : page=" + page );
+        }
+
+        String execURL = endpoint + "/?page=" + ( page );
+
+        return parseLinks( execURL );
+    }
+
+    /**
      * Iterator to search links, filter by a term
      *
      * @param term Term (must not be null)
@@ -534,6 +558,45 @@ public class ShaarliClient
         {
             return iterator( "searchterm=" + URLEncoder.encode( term ,
                                                                 "UTF-8" ) );
+        }
+        catch( UnsupportedEncodingException ex )
+        {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    /**
+     * Get all page's links, filter by a term
+     *
+     * @param page Page number (>=1)
+     * @param term Tags array
+     * @return List of links
+     */
+    public List<ShaarliLink> searchTerm( int page ,
+                                         String term )
+    {
+        if ( term == null )
+        {
+            throw new NullPointerException();
+        }
+
+        if ( page < 1 )
+        {
+            throw new IllegalArgumentException( "page must be greater or equals to 1" );
+        }
+
+        if ( logger.isDebugEnabled() )
+        {
+            logger.debug(
+                    "[" + getClass().getSimpleName() + "] searchTerm() : page=" + page + " / term=" + term );
+        }
+
+        try
+        {
+            String execURL = endpoint + "/?page=" + ( page ) + "&searchterm=" + URLEncoder.encode( term ,
+                                                                                                   "UTF-8" );
+
+            return parseLinks( execURL );
         }
         catch( UnsupportedEncodingException ex )
         {
@@ -573,14 +636,112 @@ public class ShaarliClient
 
         try
         {
-
-
-            return iterator( "searchterm=" + URLEncoder.encode( sb.toString() ,
+            return iterator( "searchtags=" + URLEncoder.encode( sb.toString() ,
                                                                 "UTF-8" ) );
         }
         catch( UnsupportedEncodingException ex )
         {
             throw new RuntimeException( ex );
+        }
+    }
+
+    /**
+     * Get all page's links, filter by tags
+     *
+     * @param page Page number (>=1)
+     * @param tags Tags array
+     * @return List of links
+     */
+    public List<ShaarliLink> searchTags( int page ,
+                                         String... tags )
+    {
+        if ( page < 1 )
+        {
+            throw new IllegalArgumentException( "page must be greater or equals to 1" );
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for ( String tag : tags )
+        {
+            if ( sb.length() > 0 )
+            {
+                sb.append( " " );
+            }
+
+            sb.append( tag );
+        }
+
+        if ( logger.isDebugEnabled() )
+        {
+            logger.debug(
+                    "[" + getClass().getSimpleName() + "] searchTags() : page=" + page + " / tags=" + sb.toString() );
+        }
+
+        try
+        {
+            String execURL = endpoint + "/?page=" + ( page ) + "searchtags=" + URLEncoder.encode( sb.toString() ,
+                                                                                                  "UTF-8" );
+
+            return parseLinks( execURL );
+        }
+        catch( UnsupportedEncodingException ex )
+        {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    /**
+     * Set the number of links by page
+     *
+     * @param count Number of links
+     */
+    public void setLinksByPage( int count )
+    {
+        if ( count <= 0 )
+        {
+            throw new IllegalArgumentException();
+        }
+
+        if ( logger.isDebugEnabled() )
+        {
+            logger.debug(
+                    "[" + getClass().getSimpleName() + "] setLinksByPage() : count=" + count );
+        }
+
+        HttpEntity responseEntity = null;
+        try
+        {
+            // Exec request
+            String execURL = endpoint + "/?linksperpage=" + count;
+            HttpGet get = new HttpGet( execURL );
+
+            HttpResponse response = client.execute( get );
+            responseEntity = response.getEntity();
+
+            StatusLine sl = response.getStatusLine();
+            if ( sl.getStatusCode() != 200 )
+            {
+                throw new IOException( sl.getReasonPhrase() );
+            }
+        }
+        catch( IOException ex )
+        {
+            logger.error( "Cannot set links per page" ,
+                          ex );
+        }
+        finally
+        {
+            if ( responseEntity != null )
+            {
+                try
+                {
+                    EntityUtils.consume( responseEntity );
+                }
+                catch( IOException ex )
+                {
+                    throw new RuntimeException( ex );
+                }
+            }
         }
     }
 
@@ -779,56 +940,6 @@ public class ShaarliClient
             logger.error( "Cannot links" ,
                           ex );
             return links;
-        }
-        finally
-        {
-            if ( responseEntity != null )
-            {
-                try
-                {
-                    EntityUtils.consume( responseEntity );
-                }
-                catch( IOException ex )
-                {
-                    throw new RuntimeException( ex );
-                }
-            }
-        }
-    }
-
-    private void setLinksByPage( int count )
-    {
-        if ( count <= 0 )
-        {
-            throw new IllegalArgumentException();
-        }
-
-        if ( logger.isDebugEnabled() )
-        {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] setLinksByPage() : count=" + count );
-        }
-
-        HttpEntity responseEntity = null;
-        try
-        {
-            // Exec request
-            String execURL = endpoint + "/?linksperpage=" + count;
-            HttpGet get = new HttpGet( execURL );
-
-            HttpResponse response = client.execute( get );
-            responseEntity = response.getEntity();
-
-            StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() != 200 )
-            {
-                throw new IOException( sl.getReasonPhrase() );
-            }
-        }
-        catch( IOException ex )
-        {
-            logger.error( "Cannot set links per page" ,
-                          ex );
         }
         finally
         {
