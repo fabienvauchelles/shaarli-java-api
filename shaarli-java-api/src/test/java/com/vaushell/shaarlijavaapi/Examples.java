@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2013 Fabien Vauchelles (fabien_AT_vauchelles_DOT_com).
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3, 29 June 2007, of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ */
+
 package com.vaushell.shaarlijavaapi;
 
 import java.io.IOException;
@@ -6,21 +25,21 @@ import java.util.Map.Entry;
 import java.util.TreeSet;
 
 /**
- * Shaarli client usage examples
+ * Shaarli client usage examples.
  *
- * @author Fabien Vauchelles (fabien AT vauchelles DOT com)
+ * @author Fabien Vauchelles (fabien_AT_vauchelles_DOT_com)
  */
-public class Examples
+public final class Examples
 {
-//    private final static String LOGIN = "MY_LOGIN";
-//    private final static String PASSWORD = "MY_PASSWORD";
-//    private final static String ENDPOINT = "http://fabien.vauchelles.com/~fabien/shaarli";
-    private final static String LOGIN = "s";
-    private final static String PASSWORD = "s";
-    private final static String ENDPOINT = "http://localhost/~torus/s/";
-
-    public static void main( String[] args )
-            throws Exception
+    // PUBLIC
+    /**
+     * Main class.
+     *
+     * @param args Arguments
+     * @throws Exception
+     */
+    public static void main( final String... args )
+        throws Exception
     {
         crudExample();
 
@@ -39,15 +58,25 @@ public class Examples
         searchTagsPage1Example();
     }
 
+    // PRIVATE
+    private static final String LOGIN = "MY_LOGIN";
+    private static final String PASSWORD = "MY_PASSWORD";
+    private static final String ENDPOINT = "http://fabien.vauchelles.com/~fabien/shaarli";
+
+    private Examples()
+    {
+        // Nothing
+    }
+
     /**
-     * Show how create/update/delete works
+     * Show how create/update/delete works.
      *
      * @throws IOException
      */
     private static void crudExample()
-            throws IOException
+        throws IOException
     {
-        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        try( final ShaarliClient client = new ShaarliClient( ENDPOINT ) )
         {
             if ( !client.login( LOGIN ,
                                 PASSWORD ) )
@@ -56,15 +85,15 @@ public class Examples
             }
 
             // Create a link
-            TreeSet<String> tags = new TreeSet<>();
+            final TreeSet<String> tags = new TreeSet<>();
             tags.add( "java" );
             tags.add( "coding" );
 
-            String id = client.createOrUpdateLink( "http://fabien.vauchelles.com/" ,
-                                                   "Blog de Fabien Vauchelles" ,
-                                                   "Du coooodde rahhh::!!!!!" ,
-                                                   tags ,
-                                                   false );
+            final String id = client.createOrUpdateLink( "http://fabien.vauchelles.com/" ,
+                                                         "Blog de Fabien Vauchelles" ,
+                                                         "Du coooodde rahhh::!!!!!" ,
+                                                         tags ,
+                                                         false );
             if ( id == null )
             {
                 throw new IOException( "Cannot create link. See error log" );
@@ -84,14 +113,14 @@ public class Examples
     }
 
     /**
-     * Show how we can get all tags
+     * Show how we can get all tags.
      *
      * @throws IOException
      */
     private static void tagsExample()
-            throws IOException
+        throws IOException
     {
-        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        try( final ShaarliClient client = new ShaarliClient( ENDPOINT ) )
         {
             if ( !client.login( LOGIN ,
                                 PASSWORD ) )
@@ -100,7 +129,7 @@ public class Examples
             }
 
             // Name tags
-            TreeSet<String> tags = new TreeSet<>();
+            final TreeSet<String> tags = new TreeSet<>();
             tags.add( "java" );
             tags.add( "coding" );
 
@@ -116,7 +145,7 @@ public class Examples
             }
 
             // Get all tags
-            for ( Entry<String , Integer> entryTag : client.getTags().entrySet() )
+            for ( final Entry<String , Integer> entryTag : client.getTags().entrySet() )
             {
                 System.out.println( "Tag: name=" + entryTag.getKey() + ", count=" + entryTag.getValue() );
             }
@@ -124,14 +153,14 @@ public class Examples
     }
 
     /**
-     * Show how we get all links
+     * Show how we get all links.
      *
      * @throws IOException
      */
     private static void searchAllExample()
-            throws IOException
+        throws IOException
     {
-        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        try( final ShaarliClient client = new ShaarliClient( ENDPOINT ) )
         {
             if ( !client.login( LOGIN ,
                                 PASSWORD ) )
@@ -140,7 +169,7 @@ public class Examples
             }
 
             // Name tags
-            TreeSet<String> tags = new TreeSet<>();
+            final TreeSet<String> tags = new TreeSet<>();
             tags.add( "java" );
             tags.add( "coding" );
 
@@ -156,10 +185,10 @@ public class Examples
             }
 
             // Iterate all links (without restriction)
-            Iterator<ShaarliLink> iterator = client.searchAllIterator();
+            final Iterator<ShaarliLink> iterator = client.searchAllIterator();
             while ( iterator.hasNext() )
             {
-                ShaarliLink link = iterator.next();
+                final ShaarliLink link = iterator.next();
 
                 System.out.println( link );
             }
@@ -167,14 +196,14 @@ public class Examples
     }
 
     /**
-     * Show how we get all links on page 1
+     * Show how we get all links on page 1.
      *
      * @throws IOException
      */
     private static void searchAllPage1example()
-            throws IOException
+        throws IOException
     {
-        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        try( final ShaarliClient client = new ShaarliClient( ENDPOINT ) )
         {
             if ( !client.login( LOGIN ,
                                 PASSWORD ) )
@@ -183,7 +212,7 @@ public class Examples
             }
 
             // Name tags
-            TreeSet<String> tags = new TreeSet<>();
+            final TreeSet<String> tags = new TreeSet<>();
             tags.add( "java" );
             tags.add( "coding" );
 
@@ -202,7 +231,7 @@ public class Examples
             client.setLinksByPage( 2 );
 
             // Iterate all links (without restriction)
-            for ( ShaarliLink link : client.searchAll( 1 ) )
+            for ( final ShaarliLink link : client.searchAll( 1 ) )
             {
                 System.out.println( link );
             }
@@ -210,14 +239,14 @@ public class Examples
     }
 
     /**
-     * Show how we use a term filter
+     * Show how we use a term filter.
      *
      * @throws IOException
      */
     private static void searchTermExample()
-            throws IOException
+        throws IOException
     {
-        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        try( final ShaarliClient client = new ShaarliClient( ENDPOINT ) )
         {
             if ( !client.login( LOGIN ,
                                 PASSWORD ) )
@@ -228,7 +257,7 @@ public class Examples
             // Create 10 links
             for ( int i = 0 ; i < 10 ; ++i )
             {
-                TreeSet<String> tags = new TreeSet<>();
+                final TreeSet<String> tags = new TreeSet<>();
                 tags.add( "java" + i );
                 tags.add( "coding" );
 
@@ -241,10 +270,10 @@ public class Examples
             }
 
             // Iterate all links (with tags filter)
-            Iterator<ShaarliLink> iterator = client.searchTermIterator( "Blog" );
+            final Iterator<ShaarliLink> iterator = client.searchTermIterator( "Blog" );
             while ( iterator.hasNext() )
             {
-                ShaarliLink link = iterator.next();
+                final ShaarliLink link = iterator.next();
 
                 System.out.println( link );
             }
@@ -252,14 +281,14 @@ public class Examples
     }
 
     /**
-     * Show how we use a term filter and get page 1
+     * Show how we use a term filter and get page 1.
      *
      * @throws IOException
      */
     private static void searchTermPage1example()
-            throws IOException
+        throws IOException
     {
-        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        try( final ShaarliClient client = new ShaarliClient( ENDPOINT ) )
         {
             if ( !client.login( LOGIN ,
                                 PASSWORD ) )
@@ -270,7 +299,7 @@ public class Examples
             // Create 10 links
             for ( int i = 0 ; i < 10 ; ++i )
             {
-                TreeSet<String> tags = new TreeSet<>();
+                final TreeSet<String> tags = new TreeSet<>();
                 tags.add( "java" + i );
                 tags.add( "coding" );
 
@@ -286,8 +315,8 @@ public class Examples
             client.setLinksByPage( 2 );
 
             // Iterate all links (without restriction)
-            for ( ShaarliLink link : client.searchTerm( 1 ,
-                                                        "Blog" ) )
+            for ( final ShaarliLink link : client.searchTerm( 1 ,
+                                                              "Blog" ) )
             {
                 System.out.println( link );
             }
@@ -295,14 +324,14 @@ public class Examples
     }
 
     /**
-     * Show how we use a tags filter
+     * Show how we use a tags filter.
      *
      * @throws IOException
      */
     private static void searchTagsExample()
-            throws IOException
+        throws IOException
     {
-        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        try( final ShaarliClient client = new ShaarliClient( ENDPOINT ) )
         {
             if ( !client.login( LOGIN ,
                                 PASSWORD ) )
@@ -313,7 +342,7 @@ public class Examples
             // Create 10 links
             for ( int i = 0 ; i < 10 ; ++i )
             {
-                TreeSet<String> tags = new TreeSet<>();
+                final TreeSet<String> tags = new TreeSet<>();
                 tags.add( "java" + i );
                 tags.add( "coding" );
 
@@ -326,11 +355,11 @@ public class Examples
             }
 
             // Iterate all links (with tags filter)
-            Iterator<ShaarliLink> iterator = client.searchTagsIterator( "coding" ,
-                                                                        "java2" );
+            final Iterator<ShaarliLink> iterator = client.searchTagsIterator( "coding" ,
+                                                                              "java2" );
             while ( iterator.hasNext() )
             {
-                ShaarliLink link = iterator.next();
+                final ShaarliLink link = iterator.next();
 
                 System.out.println( link );
             }
@@ -338,14 +367,14 @@ public class Examples
     }
 
     /**
-     * Show how we use a tags filter and get page 1
+     * Show how we use a tags filter and get page 1.
      *
      * @throws IOException
      */
     private static void searchTagsPage1Example()
-            throws IOException
+        throws IOException
     {
-        try( ShaarliClient client = new ShaarliClient( ENDPOINT ) )
+        try( final ShaarliClient client = new ShaarliClient( ENDPOINT ) )
         {
             if ( !client.login( LOGIN ,
                                 PASSWORD ) )
@@ -356,7 +385,7 @@ public class Examples
             // Create 10 links
             for ( int i = 0 ; i < 10 ; ++i )
             {
-                TreeSet<String> tags = new TreeSet<>();
+                final TreeSet<String> tags = new TreeSet<>();
                 tags.add( "java" + i );
                 tags.add( "coding" );
 
@@ -372,9 +401,9 @@ public class Examples
             client.setLinksByPage( 2 );
 
             // Iterate all links (without restriction)
-            for ( ShaarliLink link : client.searchTags( 1 ,
-                                                        "coding" ,
-                                                        "java2" ) )
+            for ( final ShaarliLink link : client.searchTags( 1 ,
+                                                              "coding" ,
+                                                              "java2" ) )
             {
                 System.out.println( link );
             }

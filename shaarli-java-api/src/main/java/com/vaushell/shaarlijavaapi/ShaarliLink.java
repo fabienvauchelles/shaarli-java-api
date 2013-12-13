@@ -1,23 +1,40 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2013 Fabien Vauchelles (fabien_AT_vauchelles_DOT_com).
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3, 29 June 2007, of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
  */
+
 package com.vaushell.shaarlijavaapi;
 
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Shaarli link
+ * Shaarli link.
  *
- * @author Fabien Vauchelles (fabien AT vauchelles DOT com)
+ * @author Fabien Vauchelles (fabien_AT_vauchelles_DOT_com)
  */
 public class ShaarliLink
+    implements Serializable
 {
     // PUBLIC
     /**
-     * Construct a link
+     * Construct a link.
      *
      * @param ID Link's ID
      * @param permaID ID of permalink
@@ -26,12 +43,12 @@ public class ShaarliLink
      * @param url Link's URL
      * @param restricted Is the link private ?
      */
-    public ShaarliLink( String ID ,
-                        String permaID ,
-                        String title ,
-                        String description ,
-                        String url ,
-                        boolean restricted )
+    public ShaarliLink( final String ID ,
+                        final String permaID ,
+                        final String title ,
+                        final String description ,
+                        final String url ,
+                        final boolean restricted )
     {
         this.ID = ID;
         this.permaID = permaID;
@@ -43,7 +60,7 @@ public class ShaarliLink
     }
 
     /**
-     * Construct a link
+     * Construct a link.
      */
     public ShaarliLink()
     {
@@ -56,9 +73,9 @@ public class ShaarliLink
     }
 
     /**
-     * Get the link's ID
+     * Get the link's ID.
      *
-     * @return
+     * @return ID the ID
      */
     public String getID()
     {
@@ -66,19 +83,19 @@ public class ShaarliLink
     }
 
     /**
-     * Set the link's ID
+     * Set the link's ID.
      *
-     * @param ID
+     * @param ID the ID
      */
-    public void setID( String ID )
+    public void setID( final String ID )
     {
         this.ID = ID;
     }
 
     /**
-     * Get the link's permalink ID
+     * Get the link's permalink ID.
      *
-     * @return
+     * @return the permanent ID
      */
     public String getPermaID()
     {
@@ -86,31 +103,31 @@ public class ShaarliLink
     }
 
     /**
-     * Build the permalink with the endpoint
+     * Build the permalink with the endpoint.
      *
      * @param endpoint from ShaarliClient.getEndpoint()
      * @return Return an URL of the permalink
      * @see ShaarliClient
      */
-    public String getPermaURL( String endpoint )
+    public String getPermaURL( final String endpoint )
     {
         return endpoint + "/?" + permaID;
     }
 
     /**
-     * Set the link's permalink ID
+     * Set the link's permalink ID.
      *
-     * @param permaID
+     * @param permaID the permanent ID
      */
-    public void setPermaID( String permaID )
+    public void setPermaID( final String permaID )
     {
         this.permaID = permaID;
     }
 
     /**
-     * Get the link title
+     * Get the link title.
      *
-     * @return
+     * @return the title
      */
     public String getTitle()
     {
@@ -118,19 +135,19 @@ public class ShaarliLink
     }
 
     /**
-     * Set the link title
+     * Set the link title.
      *
-     * @param title
+     * @param title The title
      */
-    public void setTitle( String title )
+    public void setTitle( final String title )
     {
         this.title = title;
     }
 
     /**
-     * Get the link's description
+     * Get the link's description.
      *
-     * @return
+     * @return the description
      */
     public String getDescription()
     {
@@ -138,19 +155,19 @@ public class ShaarliLink
     }
 
     /**
-     * Set the link's description
+     * Set the link's description.
      *
-     * @param description
+     * @param description The description
      */
-    public void setDescription( String description )
+    public void setDescription( final String description )
     {
         this.description = description;
     }
 
     /**
-     * Get the link URL
+     * Get the link URL.
      *
-     * @return
+     * @return the URL
      */
     public String getUrl()
     {
@@ -158,19 +175,19 @@ public class ShaarliLink
     }
 
     /**
-     * Set the link URL
+     * Set the link URL.
      *
-     * @param url
+     * @param url The URL
      */
-    public void setUrl( String url )
+    public void setUrl( final String url )
     {
         this.url = url;
     }
 
     /**
-     * Is the link private (true) or public (false) ?
+     * Is the link private (true) or public (false).
      *
-     * @return
+     * @return private (true) or public (false)
      */
     public boolean isRestricted()
     {
@@ -178,19 +195,19 @@ public class ShaarliLink
     }
 
     /**
-     * Set the link restriction
+     * Set the link restriction.
      *
-     * @param restricted
+     * @param restricted private (true) or public (false)
      */
-    public void setRestricted( boolean restricted )
+    public void setRestricted( final boolean restricted )
     {
         this.restricted = restricted;
     }
 
     /**
-     * Get all the link's tags. Lazy initialization.
+     * Get all the link's tags (lazy initialization).
      *
-     * @return
+     * @return the tags
      */
     public Set<String> getTags()
     {
@@ -203,22 +220,21 @@ public class ShaarliLink
     }
 
     /**
-     * Set all the link's tags
+     * Set all the link's tags.
      *
-     * @param tags
+     * @param tags The tags
      */
-    public void setTags(
-            Set<String> tags )
+    public void setTags( final Set<String> tags )
     {
         this.tags = tags;
     }
 
     /**
-     * Add a tag
+     * Add a tag.
      *
-     * @param tag
+     * @param tag a tag
      */
-    public void addTag( String tag )
+    public void addTag( final String tag )
     {
         getTags().add( tag );
     }
@@ -238,51 +254,60 @@ public class ShaarliLink
     }
 
     @Override
-    public boolean equals( Object obj )
+    public boolean equals( final Object obj )
     {
         if ( obj == null )
         {
             return false;
         }
+
         if ( getClass() != obj.getClass() )
         {
             return false;
         }
+
         final ShaarliLink other = (ShaarliLink) obj;
         if ( !Objects.equals( this.ID ,
                               other.ID ) )
         {
             return false;
         }
+
         if ( !Objects.equals( this.permaID ,
                               other.permaID ) )
         {
             return false;
         }
+
         if ( !Objects.equals( this.title ,
                               other.title ) )
         {
             return false;
         }
+
         if ( !Objects.equals( this.description ,
                               other.description ) )
         {
             return false;
         }
+
         if ( !Objects.equals( this.url ,
                               other.url ) )
         {
             return false;
         }
+
         if ( this.restricted != other.restricted )
         {
             return false;
         }
+
         if ( !Objects.equals( this.tags ,
                               other.tags ) )
         {
             return false;
         }
+
         return true;
     }
 
@@ -292,6 +317,7 @@ public class ShaarliLink
         return "Link{" + "ID=" + ID + ", permaID=" + permaID + ", title=" + title + ", description=" + description + ", url=" + url + ", restricted=" + restricted + ", tags=" + tags + '}';
     }
     // PRIVATE
+    private static final long serialVersionUID = 12392964032234123L;
     private String ID;
     private String permaID;
     private String title;

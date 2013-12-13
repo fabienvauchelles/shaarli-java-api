@@ -1,7 +1,22 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2013 Fabien Vauchelles (fabien_AT_vauchelles_DOT_com).
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3, 29 June 2007, of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
  */
+
 package com.vaushell.shaarlijavaapi;
 
 import java.io.IOException;
@@ -13,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -45,24 +61,24 @@ import org.slf4j.LoggerFactory;
 /**
  * Shaarli client. Now we have a JAVA access to Sebsauvage Shaarli (see http://sebsauvage.net/wiki/doku.php?id=php:shaarli)
  *
- * @author Fabien Vauchelles (fabien AT vauchelles DOT com)
+ * @author Fabien Vauchelles (fabien_AT_vauchelles_DOT_com)
  */
 public class ShaarliClient
-        implements AutoCloseable
+    implements AutoCloseable
 {
     // PUBLIC
     /**
-     * Construct the DAO with a specific http client
+     * Construct the DAO with a specific http client.
      *
      * @param client Specific HTTP client
      * @param endpoint Shaarli endpoint (like http://fabien.vauchelles.com/~fabien/shaarli)
      */
-    public ShaarliClient( HttpClient client ,
-                          String endpoint )
+    public ShaarliClient( final HttpClient client ,
+                          final String endpoint )
     {
         if ( client == null || endpoint == null )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
         this.cm = null;
@@ -71,24 +87,24 @@ public class ShaarliClient
     }
 
     /**
-     * Construct the DAO
+     * Construct the DAO.
      *
      * @param endpoint Shaarli endpoint (like http://fabien.vauchelles.com/~fabien/shaarli)
      */
-    public ShaarliClient( String endpoint )
+    public ShaarliClient( final String endpoint )
     {
         if ( endpoint == null )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
         this.endpoint = cleanEnding( endpoint );
 
-        HttpParams params = new BasicHttpParams();
+        final HttpParams params = new BasicHttpParams();
         HttpProtocolParams.setUserAgent( params ,
                                          "Mozilla/5.0 (Windows NT 5.1; rv:15.0) Gecko/20100101 Firefox/15.0.1" );
 
-        SchemeRegistry sr = new SchemeRegistry();
+        final SchemeRegistry sr = new SchemeRegistry();
 
         sr.register( new Scheme( "http" ,
                                  80 ,
@@ -97,15 +113,15 @@ public class ShaarliClient
         this.cm = new PoolingClientConnectionManager( sr );
         this.cm.setMaxTotal( 1000 );
 
-        DefaultHttpClient lClient = new DefaultHttpClient( cm ,
-                                                           params );
+        final DefaultHttpClient lClient = new DefaultHttpClient( cm ,
+                                                                 params );
         lClient.setCookieStore( new BasicCookieStore() );
 
         this.client = lClient;
     }
 
     /**
-     * Return Shaarli endpoint
+     * Return Shaarli endpoint.
      *
      * @return endpoint
      */
@@ -115,33 +131,33 @@ public class ShaarliClient
     }
 
     /**
-     * Login
+     * Login.
      *
      * @param login Login (must not be empty)
      * @param password Password (must not be empty)
      * @return true if logged or false otherwise
      */
-    public boolean login( String login ,
-                          String password )
+    public boolean login( final String login ,
+                          final String password )
     {
         if ( login == null || password == null )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug( "[" + getClass().getSimpleName() + "] login() : login=" + login );
+            LOGGER.debug( "[" + getClass().getSimpleName() + "] login() : login=" + login );
         }
 
-        String token;
+        final String token;
         try
         {
-            token = getToken( endpoint.toString() + "/?do=login" );
+            token = getToken( endpoint + "/?do=login" );
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot retrieve login token" ,
+            LOGGER.error( "Cannot retrieve login token" ,
                           ex );
             return false;
         }
@@ -152,9 +168,9 @@ public class ShaarliClient
                        password ,
                        token );
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot retrieve login token" ,
+            LOGGER.error( "Cannot retrieve login token" ,
                           ex );
             return false;
         }
@@ -170,15 +186,15 @@ public class ShaarliClient
      * @param url Link's URL
      * @param title Link's title
      * @param description Link's description
-     * @param tagsLinks tags (set, no duplicate please)
+     * @param tags tags (set, no duplicate please)
      * @param restricted Is the link private ?
      * @return generated id
      */
-    public String createOrUpdateLink( String url ,
-                                      String title ,
-                                      String description ,
-                                      Set<String> tags ,
-                                      boolean restricted )
+    public String createOrUpdateLink( final String url ,
+                                      final String title ,
+                                      final String description ,
+                                      final Set<String> tags ,
+                                      final boolean restricted )
     {
         return createOrUpdateLink( null ,
                                    url ,
@@ -189,7 +205,7 @@ public class ShaarliClient
     }
 
     /**
-     * Create or modify a link. To modify, don't forgot the ID !
+     * Create or modify a link (to modify, don't forgot the ID !).
      *
      * @param id Link's ID. You can enforce one or let it be null (not the permalink id. Don't be confuse!)
      * @param url Link's URL
@@ -197,34 +213,34 @@ public class ShaarliClient
      * @param description Link's description
      * @param tags Links tags (set, no duplicate please)
      * @param restricted Is the link private ?
-     * @return id
+     * @return id Link's ID
      */
-    public String createOrUpdateLink( String id ,
-                                      String url ,
-                                      String title ,
-                                      String description ,
-                                      Set<String> tags ,
-                                      boolean restricted )
+    public String createOrUpdateLink( final String id ,
+                                      final String url ,
+                                      final String title ,
+                                      final String description ,
+                                      final Set<String> tags ,
+                                      final boolean restricted )
     {
         if ( url == null || title == null )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] createOrUpdateLink() : id=" + id + " / url=" + url + " / title=" + title + " / description=" + description + " / restricted=" + restricted );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] createOrUpdateLink() : id=" + id + " / url=" + url + " / title=" + title + " / description=" + description + " / restricted=" + restricted );
         }
 
-        String token;
+        final String token;
         try
         {
-            token = getToken( endpoint.toString() + "/?post" );
+            token = getToken( endpoint + "/?post" );
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot retrieve post token" ,
+            LOGGER.error( "Cannot retrieve post token" ,
                           ex );
             return null;
         }
@@ -233,20 +249,20 @@ public class ShaarliClient
         try
         {
             // Exec request
-            HttpPost post = new HttpPost( endpoint + "/?post=" + URLEncoder.encode( url ,
-                                                                                    "UTF-8" ) );
+            final HttpPost post = new HttpPost( endpoint + "/?post=" + URLEncoder.encode( url ,
+                                                                                          "UTF-8" ) );
 
-            List<BasicNameValuePair> nvps = new ArrayList<>();
+            final List<BasicNameValuePair> nvps = new ArrayList<>();
 
             String returnID;
-            if ( id != null )
+            if ( id == null )
             {
-                returnID = id;
+                returnID = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
+                                                 Locale.ENGLISH ).format( new Date() );
             }
             else
             {
-                returnID = new SimpleDateFormat( "yyyyMMdd_HHmmss" ).format( new Date() );
-
+                returnID = id;
             }
             nvps.add( new BasicNameValuePair( "lf_linkdate" ,
                                               returnID ) );
@@ -269,14 +285,14 @@ public class ShaarliClient
                                                   "true" ) );
             }
 
-            StringBuilder sbTags = new StringBuilder();
+            final StringBuilder sbTags = new StringBuilder();
             if ( tags != null )
             {
-                for ( String tag : tags )
+                for ( final String tag : tags )
                 {
                     if ( sbTags.length() > 0 )
                     {
-                        sbTags.append( " " );
+                        sbTags.append( ' ' );
                     }
 
                     sbTags.append( tag );
@@ -299,13 +315,13 @@ public class ShaarliClient
             post.setEntity( new UrlEncodedFormEntity( nvps ,
                                                       "UTF-8" ) );
 
-            HttpResponse response = client.execute( post );
+            final HttpResponse response = client.execute( post );
             responseEntity = response.getEntity();
 
-            StatusLine sl = response.getStatusLine();
+            final StatusLine sl = response.getStatusLine();
             if ( sl.getStatusCode() != 302 )
             {
-                try( InputStream is = responseEntity.getContent() )
+                try( final InputStream is = responseEntity.getContent() )
                 {
                     throw new IOException( IOUtils.toString( is ) );
                 }
@@ -313,9 +329,9 @@ public class ShaarliClient
 
             return returnID;
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot post" ,
+            LOGGER.error( "Cannot post" ,
                           ex );
             return null;
         }
@@ -327,7 +343,7 @@ public class ShaarliClient
                 {
                     EntityUtils.consume( responseEntity );
                 }
-                catch( IOException ex )
+                catch( final IOException ex )
                 {
                     throw new RuntimeException( ex );
                 }
@@ -336,32 +352,32 @@ public class ShaarliClient
     }
 
     /**
-     * Delete a link
+     * Delete a link.
      *
      * @param id Link's id (not the permalink id. Don't be confuse!)
-     * @return
+     * @return deleted or not
      */
-    public boolean delete( String id )
+    public boolean delete( final String id )
     {
         if ( id == null )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] delete() : id=" + id );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] delete() : id=" + id );
         }
 
-        String token;
+        final String token;
         try
         {
-            token = getToken( endpoint.toString() + "/?post" );
+            token = getToken( endpoint + "/?post" );
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot retrieve post token" ,
+            LOGGER.error( "Cannot retrieve post token" ,
                           ex );
             return false;
         }
@@ -370,9 +386,9 @@ public class ShaarliClient
         try
         {
             // Exec request
-            HttpPost post = new HttpPost( endpoint + "/?post" );
+            final HttpPost post = new HttpPost( endpoint + "/?post" );
 
-            List<BasicNameValuePair> nvps = new ArrayList<>();
+            final List<BasicNameValuePair> nvps = new ArrayList<>();
 
             nvps.add( new BasicNameValuePair( "lf_linkdate" ,
                                               id ) );
@@ -386,13 +402,13 @@ public class ShaarliClient
             post.setEntity( new UrlEncodedFormEntity( nvps ,
                                                       "UTF-8" ) );
 
-            HttpResponse response = client.execute( post );
+            final HttpResponse response = client.execute( post );
             responseEntity = response.getEntity();
 
-            StatusLine sl = response.getStatusLine();
+            final StatusLine sl = response.getStatusLine();
             if ( sl.getStatusCode() != 302 )
             {
-                try( InputStream is = responseEntity.getContent() )
+                try( final InputStream is = responseEntity.getContent() )
                 {
                     throw new IOException( IOUtils.toString( is ) );
                 }
@@ -400,9 +416,9 @@ public class ShaarliClient
 
             return true;
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot delete" ,
+            LOGGER.error( "Cannot delete" ,
                           ex );
             return false;
         }
@@ -414,7 +430,7 @@ public class ShaarliClient
                 {
                     EntityUtils.consume( responseEntity );
                 }
-                catch( IOException ex )
+                catch( final IOException ex )
                 {
                     throw new RuntimeException( ex );
                 }
@@ -423,45 +439,45 @@ public class ShaarliClient
     }
 
     /**
-     * Get all used tags
+     * Get all used tags.
      *
      * @return key/value with tag name and tag count
      */
     public Map<String , Integer> getTags()
     {
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] getTags()" );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] getTags()" );
         }
 
         HttpEntity responseEntity = null;
         try
         {
             // Exec request
-            String execURL = endpoint + "/?do=tagcloud";
-            HttpGet get = new HttpGet( execURL );
+            final String execURL = endpoint + "/?do=tagcloud";
+            final HttpGet get = new HttpGet( execURL );
 
-            HttpResponse response = client.execute( get );
+            final HttpResponse response = client.execute( get );
             responseEntity = response.getEntity();
 
-            StatusLine sl = response.getStatusLine();
+            final StatusLine sl = response.getStatusLine();
             if ( sl.getStatusCode() == 200 )
             {
-                try( InputStream is = responseEntity.getContent() )
+                try( final InputStream is = responseEntity.getContent() )
                 {
-                    Map<String , Integer> tags = new TreeMap<>();
+                    final Map<String , Integer> tags = new TreeMap<>();
 
-                    Document doc = Jsoup.parse( is ,
-                                                "utf-8" ,
-                                                execURL );
+                    final Document doc = Jsoup.parse( is ,
+                                                      "UTF-8" ,
+                                                      execURL );
 
-                    Elements elts = doc.select( "#cloudtag *" );
-                    Iterator<Element> itElts = elts.iterator();
+                    final Elements elts = doc.select( "#cloudtag *" );
+                    final Iterator<Element> itElts = elts.iterator();
                     while ( itElts.hasNext() )
                     {
-                        int count = Integer.parseInt( itElts.next().text() );
-                        String name = itElts.next().text();
+                        final int count = Integer.parseInt( itElts.next().text() );
+                        final String name = itElts.next().text();
 
                         tags.put( name ,
                                   count );
@@ -475,9 +491,9 @@ public class ShaarliClient
                 throw new IOException( sl.getReasonPhrase() );
             }
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot retrieve tags" ,
+            LOGGER.error( "Cannot retrieve tags" ,
                           ex );
             return null;
         }
@@ -489,7 +505,7 @@ public class ShaarliClient
                 {
                     EntityUtils.consume( responseEntity );
                 }
-                catch( IOException ex )
+                catch( final IOException ex )
                 {
                     throw new RuntimeException( ex );
                 }
@@ -498,62 +514,62 @@ public class ShaarliClient
     }
 
     /**
-     * Iterator to search all links in shaarli
+     * Iterator to search all links in shaarli.
      *
-     * @return
+     * @return the iterator
      */
     public Iterator<ShaarliLink> searchAllIterator()
     {
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] searchAllIterator()" );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchAllIterator()" );
         }
 
         return iterator( null );
     }
 
     /**
-     * Get all page's links
+     * Get all page's links.
      *
      * @param page Page number (>=1)
      * @return List of links
      */
-    public List<ShaarliLink> searchAll( int page )
+    public List<ShaarliLink> searchAll( final int page )
     {
         if ( page < 1 )
         {
             throw new IllegalArgumentException( "page must be greater or equals to 1" );
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] searchAll() : page=" + page );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchAll() : page=" + page );
         }
 
-        String execURL = endpoint + "/?page=" + ( page );
+        final String execURL = endpoint + "/?page=" + page;
 
         return parseLinks( execURL );
     }
 
     /**
-     * Iterator to search links, filter by a term
+     * Iterator to search links, filter by a term.
      *
      * @param term Term (must not be null)
      * @return an iterator
      */
-    public Iterator<ShaarliLink> searchTermIterator( String term )
+    public Iterator<ShaarliLink> searchTermIterator( final String term )
     {
         if ( term == null )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] searchTermIterator() : term=" + term );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchTermIterator() : term=" + term );
         }
 
         try
@@ -561,25 +577,25 @@ public class ShaarliClient
             return iterator( "searchterm=" + URLEncoder.encode( term ,
                                                                 "UTF-8" ) );
         }
-        catch( UnsupportedEncodingException ex )
+        catch( final UnsupportedEncodingException ex )
         {
             throw new RuntimeException( ex );
         }
     }
 
     /**
-     * Get all page's links, filter by a term
+     * Get all page's links, filter by a term.
      *
      * @param page Page number (>=1)
      * @param term Tags array
      * @return List of links
      */
-    public List<ShaarliLink> searchTerm( int page ,
-                                         String term )
+    public List<ShaarliLink> searchTerm( final int page ,
+                                         final String term )
     {
         if ( term == null )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
         if ( page < 1 )
@@ -587,53 +603,53 @@ public class ShaarliClient
             throw new IllegalArgumentException( "page must be greater or equals to 1" );
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] searchTerm() : page=" + page + " / term=" + term );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchTerm() : page=" + page + " / term=" + term );
         }
 
         try
         {
-            String execURL = endpoint + "/?page=" + ( page ) + "&searchterm=" + URLEncoder.encode( term ,
-                                                                                                   "UTF-8" );
+            final String execURL = endpoint + "/?page=" + page + "&searchterm=" + URLEncoder.encode( term ,
+                                                                                                     "UTF-8" );
 
             return parseLinks( execURL );
         }
-        catch( UnsupportedEncodingException ex )
+        catch( final UnsupportedEncodingException ex )
         {
             throw new RuntimeException( ex );
         }
     }
 
     /**
-     * Iterator to search links, filter by tags
+     * Iterator to search links, filter by tags.
      *
      * @param tags Tags array
      * @return an iterator
      */
-    public Iterator<ShaarliLink> searchTagsIterator( String... tags )
+    public Iterator<ShaarliLink> searchTagsIterator( final String... tags )
     {
         if ( tags == null || tags.length <= 0 )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
-        StringBuilder sb = new StringBuilder();
-        for ( String tag : tags )
+        final StringBuilder sb = new StringBuilder();
+        for ( final String tag : tags )
         {
             if ( sb.length() > 0 )
             {
-                sb.append( " " );
+                sb.append( ' ' );
             }
 
             sb.append( tag );
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] searchTagsIterator() : tags=" + sb.toString() );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchTagsIterator() : tags=" + sb.toString() );
         }
 
         try
@@ -641,94 +657,94 @@ public class ShaarliClient
             return iterator( "searchtags=" + URLEncoder.encode( sb.toString() ,
                                                                 "UTF-8" ) );
         }
-        catch( UnsupportedEncodingException ex )
+        catch( final UnsupportedEncodingException ex )
         {
             throw new RuntimeException( ex );
         }
     }
 
     /**
-     * Get all page's links, filter by tags
+     * Get all page's links, filter by tags.
      *
      * @param page Page number (>=1)
      * @param tags Tags array
      * @return List of links
      */
-    public List<ShaarliLink> searchTags( int page ,
-                                         String... tags )
+    public List<ShaarliLink> searchTags( final int page ,
+                                         final String... tags )
     {
         if ( page < 1 )
         {
             throw new IllegalArgumentException( "page must be greater or equals to 1" );
         }
 
-        StringBuilder sb = new StringBuilder();
-        for ( String tag : tags )
+        final StringBuilder sb = new StringBuilder();
+        for ( final String tag : tags )
         {
             if ( sb.length() > 0 )
             {
-                sb.append( " " );
+                sb.append( ' ' );
             }
 
             sb.append( tag );
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] searchTags() : page=" + page + " / tags=" + sb.toString() );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchTags() : page=" + page + " / tags=" + sb.toString() );
         }
 
         try
         {
-            String execURL = endpoint + "/?page=" + ( page ) + "searchtags=" + URLEncoder.encode( sb.toString() ,
-                                                                                                  "UTF-8" );
+            final String execURL = endpoint + "/?page=" + page + "searchtags=" + URLEncoder.encode( sb.toString() ,
+                                                                                                    "UTF-8" );
 
             return parseLinks( execURL );
         }
-        catch( UnsupportedEncodingException ex )
+        catch( final UnsupportedEncodingException ex )
         {
             throw new RuntimeException( ex );
         }
     }
 
     /**
-     * Set the number of links by page
+     * Set the number of links by page.
      *
      * @param count Number of links
      */
-    public void setLinksByPage( int count )
+    public void setLinksByPage( final int count )
     {
         if ( count <= 0 )
         {
             throw new IllegalArgumentException();
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] setLinksByPage() : count=" + count );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] setLinksByPage() : count=" + count );
         }
 
         HttpEntity responseEntity = null;
         try
         {
             // Exec request
-            String execURL = endpoint + "/?linksperpage=" + count;
-            HttpGet get = new HttpGet( execURL );
+            final String execURL = endpoint + "/?linksperpage=" + count;
+            final HttpGet get = new HttpGet( execURL );
 
-            HttpResponse response = client.execute( get );
+            final HttpResponse response = client.execute( get );
             responseEntity = response.getEntity();
 
-            StatusLine sl = response.getStatusLine();
+            final StatusLine sl = response.getStatusLine();
             if ( sl.getStatusCode() != 200 )
             {
                 throw new IOException( sl.getReasonPhrase() );
             }
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot set links per page" ,
+            LOGGER.error( "Cannot set links per page" ,
                           ex );
         }
         finally
@@ -739,7 +755,7 @@ public class ShaarliClient
                 {
                     EntityUtils.consume( responseEntity );
                 }
-                catch( IOException ex )
+                catch( final IOException ex )
                 {
                     throw new RuntimeException( ex );
                 }
@@ -748,7 +764,7 @@ public class ShaarliClient
     }
 
     /**
-     * Close the Shaarli connection
+     * Close the Shaarli connection.
      */
     @Override
     public void close()
@@ -759,37 +775,37 @@ public class ShaarliClient
         }
     }
     // PRIVATE
-    private final static int MAX_LINKS_BY_PAGE = 100;
-    private final static Logger logger = LoggerFactory.getLogger( ShaarliClient.class );
-    private HttpClient client;
-    private PoolingClientConnectionManager cm;
-    private String endpoint;
+    private static final int MAX_LINKS_BY_PAGE = 100;
+    private static final Logger LOGGER = LoggerFactory.getLogger( ShaarliClient.class );
+    private final HttpClient client;
+    private final PoolingClientConnectionManager cm;
+    private final String endpoint;
 
-    private String getToken( String execURL )
-            throws IOException
+    private String getToken( final String execURL )
+        throws IOException
     {
         HttpEntity responseEntity = null;
         try
         {
             // Exec request
-            HttpGet get = new HttpGet( execURL );
+            final HttpGet get = new HttpGet( execURL );
 
-            HttpResponse response = client.execute( get );
+            final HttpResponse response = client.execute( get );
             responseEntity = response.getEntity();
 
-            StatusLine sl = response.getStatusLine();
+            final StatusLine sl = response.getStatusLine();
             if ( sl.getStatusCode() != 200 )
             {
                 throw new IOException( sl.getReasonPhrase() );
             }
 
-            try( InputStream is = responseEntity.getContent() )
+            try( final InputStream is = responseEntity.getContent() )
             {
-                Document doc = Jsoup.parse( is ,
-                                            "utf-8" ,
-                                            execURL );
+                final Document doc = Jsoup.parse( is ,
+                                                  "UTF-8" ,
+                                                  execURL );
 
-                Elements elts = doc.select( "input[name=token]" );
+                final Elements elts = doc.select( "input[name=token]" );
                 if ( elts == null || elts.size() <= 0 )
                 {
                     return null;
@@ -809,18 +825,18 @@ public class ShaarliClient
         }
     }
 
-    private void loginImpl( String login ,
-                            String password ,
-                            String token )
-            throws IOException
+    private void loginImpl( final String login ,
+                            final String password ,
+                            final String token )
+        throws IOException
     {
         HttpEntity responseEntity = null;
         try
         {
             // Exec request
-            HttpPost post = new HttpPost( endpoint.toString() + "/?do=login" );
+            final HttpPost post = new HttpPost( endpoint + "/?do=login" );
 
-            List<BasicNameValuePair> nvps = new ArrayList<>();
+            final List<BasicNameValuePair> nvps = new ArrayList<>();
             nvps.add( new BasicNameValuePair( "login" ,
                                               login ) );
             nvps.add( new BasicNameValuePair( "password" ,
@@ -832,13 +848,13 @@ public class ShaarliClient
             post.setEntity( new UrlEncodedFormEntity( nvps ,
                                                       "UTF-8" ) );
 
-            HttpResponse response = client.execute( post );
+            final HttpResponse response = client.execute( post );
             responseEntity = response.getEntity();
 
-            StatusLine sl = response.getStatusLine();
+            final StatusLine sl = response.getStatusLine();
             if ( sl.getStatusCode() != 302 )
             {
-                try( InputStream is = responseEntity.getContent() )
+                try( final InputStream is = responseEntity.getContent() )
                 {
                     throw new IOException( IOUtils.toString( is ) );
                 }
@@ -853,47 +869,47 @@ public class ShaarliClient
         }
     }
 
-    private List<ShaarliLink> parseLinks( String execURL )
+    private List<ShaarliLink> parseLinks( final String execURL )
     {
         if ( execURL == null )
         {
-            throw new NullPointerException();
+            throw new IllegalArgumentException();
         }
 
-        if ( logger.isDebugEnabled() )
+        if ( LOGGER.isDebugEnabled() )
         {
-            logger.debug(
-                    "[" + getClass().getSimpleName() + "] parseLinks() : execURL=" + execURL );
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] parseLinks() : execURL=" + execURL );
         }
 
-        List<ShaarliLink> links = new ArrayList<>();
+        final List<ShaarliLink> links = new ArrayList<>();
 
         HttpEntity responseEntity = null;
         try
         {
             // Exec request
-            HttpGet get = new HttpGet( execURL );
+            final HttpGet get = new HttpGet( execURL );
 
-            HttpResponse response = client.execute( get );
+            final HttpResponse response = client.execute( get );
             responseEntity = response.getEntity();
 
-            StatusLine sl = response.getStatusLine();
+            final StatusLine sl = response.getStatusLine();
             if ( sl.getStatusCode() == 200 )
             {
-                try( InputStream is = responseEntity.getContent() )
+                try( final InputStream is = responseEntity.getContent() )
                 {
-                    Document doc = Jsoup.parse( is ,
-                                                "utf-8" ,
-                                                execURL );
+                    final Document doc = Jsoup.parse( is ,
+                                                      "UTF-8" ,
+                                                      execURL );
 
-                    Elements elts = doc.select( "ul li" );
+                    final Elements elts = doc.select( "ul li" );
                     if ( elts != null )
                     {
-                        for ( Element elt : elts )
+                        for ( final Element elt : elts )
                         {
-                            boolean restricted;
-                            String cssClass = elt.attr( "class" );
-                            if ( cssClass != null && cssClass.equals( "private" ) )
+                            final boolean restricted;
+                            final String cssClass = elt.attr( "class" );
+                            if ( "private".equals( cssClass ) )
                             {
                                 restricted = true;
                             }
@@ -902,25 +918,25 @@ public class ShaarliClient
                                 restricted = false;
                             }
 
-                            String ID = elt.select( "input[name=lf_linkdate" ).attr( "value" );
-                            String permaID = elt.select( "a[name]" ).attr( "id" );
-                            String title = elt.select( "span[class=linktitle]" ).text();
-                            String description = elt.select( "div[class=linkdescription]" ).text();
-                            String url = elt.select( "span[class=linkurl]" ).text();
+                            final String ID = elt.select( "input[name=lf_linkdate" ).attr( "value" );
+                            final String permaID = elt.select( "a[name]" ).attr( "id" );
+                            final String title = elt.select( "span[class=linktitle]" ).text();
+                            final String description = elt.select( "div[class=linkdescription]" ).text();
+                            final String url = elt.select( "span[class=linkurl]" ).text();
 
-                            ShaarliLink link = new ShaarliLink( ID ,
-                                                                permaID ,
-                                                                title ,
-                                                                description ,
-                                                                url ,
-                                                                restricted );
+                            final ShaarliLink link = new ShaarliLink( ID ,
+                                                                      permaID ,
+                                                                      title ,
+                                                                      description ,
+                                                                      url ,
+                                                                      restricted );
 
-                            Elements eltsTag = elt.select( "div[class=linktaglist] a" );
+                            final Elements eltsTag = elt.select( "div[class=linktaglist] a" );
                             if ( eltsTag != null )
                             {
-                                for ( Element eltTag : eltsTag )
+                                for ( final Element eltTag : eltsTag )
                                 {
-                                    String tag = eltTag.text();
+                                    final String tag = eltTag.text();
 
                                     link.addTag( tag );
                                 }
@@ -938,9 +954,9 @@ public class ShaarliClient
                 throw new IOException( sl.getReasonPhrase() );
             }
         }
-        catch( IOException ex )
+        catch( final IOException ex )
         {
-            logger.error( "Cannot links" ,
+            LOGGER.error( "Cannot links" ,
                           ex );
             return links;
         }
@@ -952,7 +968,7 @@ public class ShaarliClient
                 {
                     EntityUtils.consume( responseEntity );
                 }
-                catch( IOException ex )
+                catch( final IOException ex )
                 {
                     throw new RuntimeException( ex );
                 }
@@ -964,11 +980,7 @@ public class ShaarliClient
     {
         return new Iterator<ShaarliLink>()
         {
-            private List<ShaarliLink> buffer = new ArrayList<>();
-            private int bufferCursor = 0;
-            private int page = 1;
-            private String lastID = null;
-
+            // PUBLIC
             @Override
             public boolean hasNext()
             {
@@ -981,20 +993,23 @@ public class ShaarliClient
                     buffer.clear();
                     bufferCursor = 0;
 
-                    String execURL = endpoint + "/?page=" + ( page++ );
+                    final List<ShaarliLink> links;
                     if ( query != null && query.length() > 0 )
                     {
-                        execURL += "&" + query;
+                        links = parseLinks( endpoint + "/?page=" + ( page++ ) + "&" + query );
+                    }
+                    else
+                    {
+                        links = parseLinks( endpoint + "/?page=" + ( page++ ) );
                     }
 
-                    List<ShaarliLink> links = parseLinks( execURL );
                     if ( links.isEmpty() )
                     {
                         return false;
                     }
                     else
                     {
-                        String linksLastID = links.get( links.size() - 1 ).getID();
+                        final String linksLastID = links.get( links.size() - 1 ).getID();
                         if ( lastID != null && lastID.equals( linksLastID ) )
                         {
                             return false;
@@ -1022,10 +1037,16 @@ public class ShaarliClient
             {
                 throw new UnsupportedOperationException();
             }
+
+            // PRIVATE
+            private final List<ShaarliLink> buffer = new ArrayList<>();
+            private int bufferCursor;
+            private int page = 1;
+            private String lastID;
         };
     }
 
-    private static String cleanEnding( String url )
+    private static String cleanEnding( final String url )
     {
         if ( url.endsWith( "/" ) )
         {
