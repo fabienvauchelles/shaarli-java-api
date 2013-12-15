@@ -514,7 +514,7 @@ public class ShaarliClient
     }
 
     /**
-     * Iterator to search all links in shaarli.
+     * Iterator to search all links in shaarli. Warning: ID appears only when logged.
      *
      * @return the iterator
      */
@@ -530,7 +530,7 @@ public class ShaarliClient
     }
 
     /**
-     * Get all page's links.
+     * Get all page's links. Warning: ID appears only when logged.
      *
      * @param page Page number (>=1)
      * @return List of links
@@ -554,7 +554,7 @@ public class ShaarliClient
     }
 
     /**
-     * Iterator to search links, filter by a term.
+     * Iterator to search links, filter by a term. Warning: ID appears only when logged.
      *
      * @param term Term (must not be null)
      * @return an iterator
@@ -584,7 +584,7 @@ public class ShaarliClient
     }
 
     /**
-     * Get all page's links, filter by a term.
+     * Get all page's links, filter by a term. Warning: ID appears only when logged.
      *
      * @param page Page number (>=1)
      * @param term Tags array
@@ -623,7 +623,7 @@ public class ShaarliClient
     }
 
     /**
-     * Iterator to search links, filter by tags.
+     * Iterator to search links, filter by tags. Warning: ID appears only when logged.
      *
      * @param tags Tags array
      * @return an iterator
@@ -664,7 +664,7 @@ public class ShaarliClient
     }
 
     /**
-     * Get all page's links, filter by tags.
+     * Get all page's links, filter by tags. Warning: ID appears only when logged.
      *
      * @param page Page number (>=1)
      * @param tags Tags array
@@ -918,11 +918,35 @@ public class ShaarliClient
                                 restricted = false;
                             }
 
-                            final String ID = elt.select( "input[name=lf_linkdate" ).attr( "value" );
-                            final String permaID = elt.select( "a[name]" ).attr( "id" );
-                            final String title = elt.select( "span[class=linktitle]" ).text();
-                            final String description = elt.select( "div[class=linkdescription]" ).text();
-                            final String url = elt.select( "span[class=linkurl]" ).text();
+                            String ID = elt.select( "input[name=lf_linkdate]" ).attr( "value" ).trim();
+                            if ( ID.isEmpty() )
+                            {
+                                ID = null;
+                            }
+
+                            String permaID = elt.select( "a[name]" ).attr( "id" ).trim();
+                            if ( permaID.isEmpty() )
+                            {
+                                permaID = null;
+                            }
+
+                            String title = elt.select( "span[class=linktitle]" ).text().trim();
+                            if ( title.isEmpty() )
+                            {
+                                title = null;
+                            }
+
+                            String description = elt.select( "div[class=linkdescription]" ).text().trim();
+                            if ( description.isEmpty() )
+                            {
+                                description = null;
+                            }
+
+                            String url = elt.select( "span[class=linkurl]" ).text().trim();
+                            if ( url.isEmpty() )
+                            {
+                                url = null;
+                            }
 
                             final ShaarliLink link = new ShaarliLink( ID ,
                                                                       permaID ,
@@ -936,9 +960,11 @@ public class ShaarliClient
                             {
                                 for ( final Element eltTag : eltsTag )
                                 {
-                                    final String tag = eltTag.text();
-
-                                    link.addTag( tag );
+                                    final String tag = eltTag.text().trim();
+                                    if ( !tag.isEmpty() )
+                                    {
+                                        link.addTag( tag );
+                                    }
                                 }
                             }
 
