@@ -61,6 +61,11 @@ MA 02110-1301  USA
         </developer>
     </developers>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <netbeans.hint.license>lgpl3</netbeans.hint.license>
+    </properties>
+
     <scm>
         <connection>scm:git:${project.url}.git</connection>
         <developerConnection>scm:git:${project.url}.git</developerConnection>
