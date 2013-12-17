@@ -34,24 +34,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -75,7 +71,7 @@ public class ShaarliClient
      * @param client Specific HTTP client
      * @param endpoint Shaarli endpoint (like http://fabien.vauchelles.com/~fabien/shaarli)
      */
-    public ShaarliClient( final HttpClient client ,
+    public ShaarliClient( final CloseableHttpClient client ,
                           final String endpoint )
     {
         if ( client == null || endpoint == null )
@@ -83,7 +79,6 @@ public class ShaarliClient
             throw new IllegalArgumentException();
         }
 
-        this.cm = null;
         this.client = client;
         this.endpoint = cleanEnding( endpoint );
         this.df = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
@@ -110,24 +105,11 @@ public class ShaarliClient
         this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy" ,
                                              Locale.ENGLISH );
 
-        final HttpParams params = new BasicHttpParams();
-        HttpProtocolParams.setUserAgent( params ,
-                                         "Mozilla/5.0 (Windows NT 5.1; rv:15.0) Gecko/20100101 Firefox/15.0.1" );
-
-        final SchemeRegistry sr = new SchemeRegistry();
-
-        sr.register( new Scheme( "http" ,
-                                 80 ,
-                                 PlainSocketFactory.getSocketFactory() ) );
-
-        this.cm = new PoolingClientConnectionManager( sr );
-        this.cm.setMaxTotal( 1000 );
-
-        final DefaultHttpClient lClient = new DefaultHttpClient( cm ,
-                                                                 params );
-        lClient.setCookieStore( new BasicCookieStore() );
-
-        this.client = lClient;
+        this.client = HttpClientBuilder
+            .create()
+            .setDefaultCookieStore( new BasicCookieStore() )
+            .setUserAgent( "Mozilla/5.0 (Windows NT 5.1; rv:15.0) Gecko/20100101 Firefox/15.0.1" )
+            .build();
     }
 
     /**
@@ -294,7 +276,7 @@ public class ShaarliClient
             final HttpPost post = new HttpPost( endpoint + "/?post=" + URLEncoder.encode( url ,
                                                                                           "UTF-8" ) );
 
-            final List<BasicNameValuePair> nvps = new ArrayList<>();
+            final List<NameValuePair> nvps = new ArrayList<>();
 
             nvps.add( new BasicNameValuePair( "lf_linkdate" ,
                                               ID ) );
@@ -347,15 +329,17 @@ public class ShaarliClient
             post.setEntity( new UrlEncodedFormEntity( nvps ,
                                                       "UTF-8" ) );
 
-            final HttpResponse response = client.execute( post );
-            responseEntity = response.getEntity();
-
-            final StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() != 302 )
+            try( final CloseableHttpResponse response = client.execute( post ) )
             {
-                try( final InputStream is = responseEntity.getContent() )
+                responseEntity = response.getEntity();
+
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() != 302 )
                 {
-                    throw new IOException( IOUtils.toString( is ) );
+                    try( final InputStream is = responseEntity.getContent() )
+                    {
+                        throw new IOException( IOUtils.toString( is ) );
+                    }
                 }
             }
 
@@ -442,7 +426,7 @@ public class ShaarliClient
             // Exec request
             final HttpPost post = new HttpPost( endpoint + "/?post" );
 
-            final List<BasicNameValuePair> nvps = new ArrayList<>();
+            final List<NameValuePair> nvps = new ArrayList<>();
 
             nvps.add( new BasicNameValuePair( "lf_linkdate" ,
                                               ID ) );
@@ -456,19 +440,21 @@ public class ShaarliClient
             post.setEntity( new UrlEncodedFormEntity( nvps ,
                                                       "UTF-8" ) );
 
-            final HttpResponse response = client.execute( post );
-            responseEntity = response.getEntity();
-
-            final StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() != 302 )
+            try( final CloseableHttpResponse response = client.execute( post ) )
             {
-                try( final InputStream is = responseEntity.getContent() )
-                {
-                    throw new IOException( IOUtils.toString( is ) );
-                }
-            }
+                responseEntity = response.getEntity();
 
-            return true;
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() != 302 )
+                {
+                    try( final InputStream is = responseEntity.getContent() )
+                    {
+                        throw new IOException( IOUtils.toString( is ) );
+                    }
+                }
+
+                return true;
+            }
         }
         catch( final IOException ex )
         {
@@ -537,37 +523,39 @@ public class ShaarliClient
             final String execURL = endpoint + "/?do=tagcloud";
             final HttpGet get = new HttpGet( execURL );
 
-            final HttpResponse response = client.execute( get );
-            responseEntity = response.getEntity();
-
-            final StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() == 200 )
+            try( final CloseableHttpResponse response = client.execute( get ) )
             {
-                try( final InputStream is = responseEntity.getContent() )
+                responseEntity = response.getEntity();
+
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() == 200 )
                 {
-                    final Map<String , Integer> tags = new TreeMap<>();
-
-                    final Document doc = Jsoup.parse( is ,
-                                                      "UTF-8" ,
-                                                      execURL );
-
-                    final Elements elts = doc.select( "#cloudtag *" );
-                    final Iterator<Element> itElts = elts.iterator();
-                    while ( itElts.hasNext() )
+                    try( final InputStream is = responseEntity.getContent() )
                     {
-                        final int count = Integer.parseInt( itElts.next().text() );
-                        final String name = itElts.next().text();
+                        final Map<String , Integer> tags = new TreeMap<>();
 
-                        tags.put( name ,
-                                  count );
+                        final Document doc = Jsoup.parse( is ,
+                                                          "UTF-8" ,
+                                                          execURL );
+
+                        final Elements elts = doc.select( "#cloudtag *" );
+                        final Iterator<Element> itElts = elts.iterator();
+                        while ( itElts.hasNext() )
+                        {
+                            final int count = Integer.parseInt( itElts.next().text() );
+                            final String name = itElts.next().text();
+
+                            tags.put( name ,
+                                      count );
+                        }
+
+                        return tags;
                     }
-
-                    return tags;
                 }
-            }
-            else
-            {
-                throw new IOException( sl.getReasonPhrase() );
+                else
+                {
+                    throw new IOException( sl.getReasonPhrase() );
+                }
             }
         }
         catch( final IOException ex )
@@ -812,13 +800,15 @@ public class ShaarliClient
             final String execURL = endpoint + "/?linksperpage=" + count;
             final HttpGet get = new HttpGet( execURL );
 
-            final HttpResponse response = client.execute( get );
-            responseEntity = response.getEntity();
-
-            final StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() != 200 )
+            try( final CloseableHttpResponse response = client.execute( get ) )
             {
-                throw new IOException( sl.getReasonPhrase() );
+                responseEntity = response.getEntity();
+
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() != 200 )
+                {
+                    throw new IOException( sl.getReasonPhrase() );
+                }
             }
         }
         catch( final IOException ex )
@@ -856,38 +846,40 @@ public class ShaarliClient
             // Exec request
             final HttpGet get = new HttpGet( endpoint );
 
-            final HttpResponse response = client.execute( get );
-            responseEntity = response.getEntity();
-
-            final StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() != 200 )
+            try( final CloseableHttpResponse response = client.execute( get ) )
             {
-                throw new IOException();
-            }
+                responseEntity = response.getEntity();
 
-            try( final InputStream is = responseEntity.getContent() )
-            {
-                final Document doc = Jsoup.parse( is ,
-                                                  "UTF-8" ,
-                                                  endpoint );
-
-                final Pattern p = Pattern.compile( "\\d+" );
-                final Matcher m = p.matcher( doc.select( "#pageheader div.nomobile" ).text().trim() );
-                if ( m.find() )
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() != 200 )
                 {
-                    final String countStr = m.group();
-                    try
-                    {
-                        return Integer.parseInt( countStr );
-                    }
-                    catch( final NumberFormatException ex )
-                    {
-                        throw new RuntimeException( ex );
-                    }
+                    throw new IOException();
                 }
-                else
+
+                try( final InputStream is = responseEntity.getContent() )
                 {
-                    return 0;
+                    final Document doc = Jsoup.parse( is ,
+                                                      "UTF-8" ,
+                                                      endpoint );
+
+                    final Pattern p = Pattern.compile( "\\d+" );
+                    final Matcher m = p.matcher( doc.select( "#pageheader div.nomobile" ).text().trim() );
+                    if ( m.find() )
+                    {
+                        final String countStr = m.group();
+                        try
+                        {
+                            return Integer.parseInt( countStr );
+                        }
+                        catch( final NumberFormatException ex )
+                        {
+                            throw new RuntimeException( ex );
+                        }
+                    }
+                    else
+                    {
+                        return 0;
+                    }
                 }
             }
         }
@@ -916,13 +908,16 @@ public class ShaarliClient
 
     /**
      * Close the Shaarli connection.
+     *
+     * @throws java.io.IOException
      */
     @Override
     public void close()
+        throws IOException
     {
-        if ( cm != null )
+        if ( client != null )
         {
-            cm.shutdown();
+            client.close();
         }
     }
 
@@ -945,8 +940,7 @@ public class ShaarliClient
     // PRIVATE
     private static final int MAX_LINKS_BY_PAGE = 100;
     private static final Logger LOGGER = LoggerFactory.getLogger( ShaarliClient.class );
-    private final HttpClient client;
-    private final PoolingClientConnectionManager cm;
+    private final CloseableHttpClient client;
     private final String endpoint;
     private SimpleDateFormat df;
     private SimpleDateFormat dfPerma;
@@ -960,29 +954,31 @@ public class ShaarliClient
             // Exec request
             final HttpGet get = new HttpGet( execURL );
 
-            final HttpResponse response = client.execute( get );
-            responseEntity = response.getEntity();
-
-            final StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() != 200 )
+            try( final CloseableHttpResponse response = client.execute( get ) )
             {
-                throw new IOException( sl.getReasonPhrase() );
-            }
+                responseEntity = response.getEntity();
 
-            try( final InputStream is = responseEntity.getContent() )
-            {
-                final Document doc = Jsoup.parse( is ,
-                                                  "UTF-8" ,
-                                                  execURL );
-
-                final Elements elts = doc.select( "input[name=token]" );
-                if ( elts == null || elts.size() <= 0 )
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() != 200 )
                 {
-                    return null;
+                    throw new IOException( sl.getReasonPhrase() );
                 }
-                else
+
+                try( final InputStream is = responseEntity.getContent() )
                 {
-                    return elts.get( 0 ).attr( "value" );
+                    final Document doc = Jsoup.parse( is ,
+                                                      "UTF-8" ,
+                                                      execURL );
+
+                    final Elements elts = doc.select( "input[name=token]" );
+                    if ( elts == null || elts.size() <= 0 )
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        return elts.get( 0 ).attr( "value" );
+                    }
                 }
             }
         }
@@ -1006,7 +1002,7 @@ public class ShaarliClient
             // Exec request
             final HttpPost post = new HttpPost( endpoint + "/?do=login" );
 
-            final List<BasicNameValuePair> nvps = new ArrayList<>();
+            final List<NameValuePair> nvps = new ArrayList<>();
             nvps.add( new BasicNameValuePair( "login" ,
                                               login ) );
             nvps.add( new BasicNameValuePair( "password" ,
@@ -1018,15 +1014,17 @@ public class ShaarliClient
             post.setEntity( new UrlEncodedFormEntity( nvps ,
                                                       "UTF-8" ) );
 
-            final HttpResponse response = client.execute( post );
-            responseEntity = response.getEntity();
-
-            final StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() != 302 )
+            try( final CloseableHttpResponse response = client.execute( post ) )
             {
-                try( final InputStream is = responseEntity.getContent() )
+                responseEntity = response.getEntity();
+
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() != 302 )
                 {
-                    throw new IOException( IOUtils.toString( is ) );
+                    try( final InputStream is = responseEntity.getContent() )
+                    {
+                        throw new IOException( IOUtils.toString( is ) );
+                    }
                 }
             }
         }
@@ -1060,90 +1058,92 @@ public class ShaarliClient
             // Exec request
             final HttpGet get = new HttpGet( execURL );
 
-            final HttpResponse response = client.execute( get );
-            responseEntity = response.getEntity();
-
-            final StatusLine sl = response.getStatusLine();
-            if ( sl.getStatusCode() == 200 )
+            try( final CloseableHttpResponse response = client.execute( get ) )
             {
-                try( final InputStream is = responseEntity.getContent() )
+                responseEntity = response.getEntity();
+
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() == 200 )
                 {
-                    final Document doc = Jsoup.parse( is ,
-                                                      "UTF-8" ,
-                                                      execURL );
-
-                    final Elements elts = doc.select( "ul li" );
-                    if ( elts != null )
+                    try( final InputStream is = responseEntity.getContent() )
                     {
-                        for ( final Element elt : elts )
+                        final Document doc = Jsoup.parse( is ,
+                                                          "UTF-8" ,
+                                                          execURL );
+
+                        final Elements elts = doc.select( "ul li" );
+                        if ( elts != null )
                         {
-                            final boolean restricted;
-                            final String cssClass = elt.attr( "class" );
-                            if ( "private".equals( cssClass ) )
+                            for ( final Element elt : elts )
                             {
-                                restricted = true;
-                            }
-                            else
-                            {
-                                restricted = false;
-                            }
-
-                            final String ID = extractID( elt );
-
-                            String permaID = elt.select( "a[name]" ).attr( "id" ).trim();
-                            if ( permaID.isEmpty() )
-                            {
-                                permaID = null;
-                            }
-
-                            String title = elt.select( "span[class=linktitle]" ).text().trim();
-                            if ( title.isEmpty() )
-                            {
-                                title = null;
-                            }
-
-                            String description = elt.select( "div[class=linkdescription]" ).text().trim();
-                            if ( description.isEmpty() )
-                            {
-                                description = null;
-                            }
-
-                            String url = elt.select( "span[class=linkurl]" ).text().trim();
-                            if ( url.isEmpty() )
-                            {
-                                url = null;
-                            }
-
-                            final ShaarliLink link = new ShaarliLink( ID ,
-                                                                      permaID ,
-                                                                      title ,
-                                                                      description ,
-                                                                      url ,
-                                                                      restricted );
-
-                            final Elements eltsTag = elt.select( "div[class=linktaglist] a" );
-                            if ( eltsTag != null )
-                            {
-                                for ( final Element eltTag : eltsTag )
+                                final boolean restricted;
+                                final String cssClass = elt.attr( "class" );
+                                if ( "private".equals( cssClass ) )
                                 {
-                                    final String tag = eltTag.text().trim();
-                                    if ( !tag.isEmpty() )
+                                    restricted = true;
+                                }
+                                else
+                                {
+                                    restricted = false;
+                                }
+
+                                final String ID = extractID( elt );
+
+                                String permaID = elt.select( "a[name]" ).attr( "id" ).trim();
+                                if ( permaID.isEmpty() )
+                                {
+                                    permaID = null;
+                                }
+
+                                String title = elt.select( "span[class=linktitle]" ).text().trim();
+                                if ( title.isEmpty() )
+                                {
+                                    title = null;
+                                }
+
+                                String description = elt.select( "div[class=linkdescription]" ).text().trim();
+                                if ( description.isEmpty() )
+                                {
+                                    description = null;
+                                }
+
+                                String url = elt.select( "span[class=linkurl]" ).text().trim();
+                                if ( url.isEmpty() )
+                                {
+                                    url = null;
+                                }
+
+                                final ShaarliLink link = new ShaarliLink( ID ,
+                                                                          permaID ,
+                                                                          title ,
+                                                                          description ,
+                                                                          url ,
+                                                                          restricted );
+
+                                final Elements eltsTag = elt.select( "div[class=linktaglist] a" );
+                                if ( eltsTag != null )
+                                {
+                                    for ( final Element eltTag : eltsTag )
                                     {
-                                        link.addTag( tag );
+                                        final String tag = eltTag.text().trim();
+                                        if ( !tag.isEmpty() )
+                                        {
+                                            link.addTag( tag );
+                                        }
                                     }
                                 }
+
+                                links.add( link );
                             }
-
-                            links.add( link );
                         }
-                    }
 
-                    return links;
+                        return links;
+                    }
                 }
-            }
-            else
-            {
-                throw new IOException( sl.getReasonPhrase() );
+                else
+                {
+                    throw new IOException( sl.getReasonPhrase() );
+                }
             }
         }
         catch( final IOException ex )
