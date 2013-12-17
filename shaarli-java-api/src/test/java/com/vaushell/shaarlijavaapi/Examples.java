@@ -20,6 +20,7 @@
 package com.vaushell.shaarlijavaapi;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeSet;
@@ -59,9 +60,12 @@ public final class Examples
     }
 
     // PRIVATE
-    private static final String LOGIN = "MY_LOGIN";
-    private static final String PASSWORD = "MY_PASSWORD";
-    private static final String ENDPOINT = "http://fabien.vauchelles.com/~fabien/shaarli";
+//    private static final String LOGIN = "MY_LOGIN";
+//    private static final String PASSWORD = "MY_PASSWORD";
+//    private static final String ENDPOINT = "http://fabien.vauchelles.com/~fabien/shaarli";
+    private static final String LOGIN = "s";
+    private static final String PASSWORD = "s";
+    private static final String ENDPOINT = "http://localhost/~torus/s";
 
     private Examples()
     {
@@ -89,26 +93,26 @@ public final class Examples
             tags.add( "java" );
             tags.add( "coding" );
 
-            final String id = client.createOrUpdateLink( "http://fabien.vauchelles.com/" ,
-                                                         "Blog de Fabien Vauchelles" ,
-                                                         "Du coooodde rahhh::!!!!!" ,
-                                                         tags ,
-                                                         false );
-            if ( id == null )
+            final String ID = client.createLink( "http://fabien.vauchelles.com/" ,
+                                                 "Blog de Fabien Vauchelles" ,
+                                                 "Du coooodde rahhh::!!!!!" ,
+                                                 tags ,
+                                                 false );
+            if ( ID == null )
             {
                 throw new IOException( "Cannot create link. See error log" );
             }
 
             // Modify a link
-            client.createOrUpdateLink( id ,
+            client.createOrUpdateLink( ID ,
                                        "http://fabien.vauchelles.com/" ,
-                                       "Blég de Fabien" ,
-                                       "Encore du code :)" ,
+                                       "Blog de Fabien Vauchelles" ,
+                                       "Du coooodde rahhh::!!!!! mais avec des panzanis" ,
                                        tags ,
                                        false );
 
             // Delete a link
-            client.delete( id );
+            client.delete( ID );
         }
     }
 
@@ -134,14 +138,17 @@ public final class Examples
             tags.add( "coding" );
 
             // Create 10 links
+            Date t = new Date();
             for ( int i = 0 ; i < 10 ; ++i )
             {
-                client.createOrUpdateLink( "monid" + i ,
+                client.createOrUpdateLink( t ,
                                            "http://fabien.vauchelles.com/" + i ,
                                            "Blog de Fabien Vauchelles n°" + i ,
                                            "Du coooodde rahhh::!!!!! #" + i ,
                                            tags ,
                                            false );
+
+                t = new Date( t.getTime() + 1000 );
             }
 
             // Get all tags
@@ -174,14 +181,17 @@ public final class Examples
             tags.add( "coding" );
 
             // Create 10 links
+            Date t = new Date();
             for ( int i = 0 ; i < 10 ; ++i )
             {
-                client.createOrUpdateLink( "monid" + i ,
+                client.createOrUpdateLink( t ,
                                            "http://fabien.vauchelles.com/" + i ,
                                            "Blog de Fabien Vauchelles n°" + i ,
                                            "Du coooodde rahhh::!!!!! #" + i ,
                                            tags ,
                                            false );
+
+                t = new Date( t.getTime() + 1000 );
             }
 
             // Iterate all links (without restriction)
@@ -217,14 +227,17 @@ public final class Examples
             tags.add( "coding" );
 
             // Create 10 links
+            Date t = new Date();
             for ( int i = 0 ; i < 10 ; ++i )
             {
-                client.createOrUpdateLink( "monid" + i ,
+                client.createOrUpdateLink( t ,
                                            "http://fabien.vauchelles.com/" + i ,
                                            "Blog de Fabien Vauchelles n°" + i ,
                                            "Du coooodde rahhh::!!!!! #" + i ,
                                            tags ,
                                            false );
+
+                t = new Date( t.getTime() + 1000 );
             }
 
             // Show only 2 links by page
@@ -255,18 +268,21 @@ public final class Examples
             }
 
             // Create 10 links
+            Date t = new Date();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 final TreeSet<String> tags = new TreeSet<>();
                 tags.add( "java" + i );
                 tags.add( "coding" );
 
-                client.createOrUpdateLink( "monid" + i ,
+                client.createOrUpdateLink( t ,
                                            "http://fabien.vauchelles.com/" + i ,
                                            "Blog de Fabien Vauchelles n°" + i ,
                                            "Du coooodde rahhh::!!!!! #" + i ,
                                            tags ,
                                            false );
+
+                t = new Date( t.getTime() + 1000 );
             }
 
             // Iterate all links (with tags filter)
@@ -297,18 +313,21 @@ public final class Examples
             }
 
             // Create 10 links
+            Date t = new Date();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 final TreeSet<String> tags = new TreeSet<>();
                 tags.add( "java" + i );
                 tags.add( "coding" );
 
-                client.createOrUpdateLink( "monid" + i ,
+                client.createOrUpdateLink( t ,
                                            "http://fabien.vauchelles.com/" + i ,
                                            "Blog de Fabien Vauchelles n°" + i ,
                                            "Du coooodde rahhh::!!!!! #" + i ,
                                            tags ,
                                            false );
+
+                t = new Date( t.getTime() + 1000 );
             }
 
             // Show only 2 links by page
@@ -340,18 +359,21 @@ public final class Examples
             }
 
             // Create 10 links
+            Date t = new Date();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 final TreeSet<String> tags = new TreeSet<>();
                 tags.add( "java" + i );
                 tags.add( "coding" );
 
-                client.createOrUpdateLink( "monid" + i ,
+                client.createOrUpdateLink( t ,
                                            "http://fabien.vauchelles.com/" + i ,
                                            "Blog de Fabien Vauchelles n°" + i ,
                                            "Du coooodde rahhh::!!!!! #" + i ,
                                            tags ,
                                            false );
+
+                t = new Date( t.getTime() + 1000 );
             }
 
             // Iterate all links (with tags filter)
@@ -383,18 +405,21 @@ public final class Examples
             }
 
             // Create 10 links
+            Date t = new Date();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 final TreeSet<String> tags = new TreeSet<>();
                 tags.add( "java" + i );
                 tags.add( "coding" );
 
-                client.createOrUpdateLink( "monid" + i ,
+                client.createOrUpdateLink( t ,
                                            "http://fabien.vauchelles.com/" + i ,
                                            "Blog de Fabien Vauchelles n°" + i ,
                                            "Du coooodde rahhh::!!!!! #" + i ,
                                            tags ,
                                            false );
+
+                t = new Date( t.getTime() + 1000 );
             }
 
             // Show only 2 links by page

@@ -23,9 +23,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -84,6 +86,10 @@ public class ShaarliClient
         this.cm = null;
         this.client = client;
         this.endpoint = cleanEnding( endpoint );
+        this.df = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
+                                        Locale.ENGLISH );
+        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy" ,
+                                             Locale.ENGLISH );
     }
 
     /**
@@ -99,6 +105,10 @@ public class ShaarliClient
         }
 
         this.endpoint = cleanEnding( endpoint );
+        this.df = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
+                                        Locale.ENGLISH );
+        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy" ,
+                                             Locale.ENGLISH );
 
         final HttpParams params = new BasicHttpParams();
         HttpProtocolParams.setUserAgent( params ,
@@ -190,13 +200,13 @@ public class ShaarliClient
      * @param restricted Is the link private ?
      * @return generated id
      */
-    public String createOrUpdateLink( final String url ,
-                                      final String title ,
-                                      final String description ,
-                                      final Set<String> tags ,
-                                      final boolean restricted )
+    public String createLink( final String url ,
+                              final String title ,
+                              final String description ,
+                              final Set<String> tags ,
+                              final boolean restricted )
     {
-        return createOrUpdateLink( null ,
+        return createOrUpdateLink( new Date() ,
                                    url ,
                                    title ,
                                    description ,
@@ -207,7 +217,7 @@ public class ShaarliClient
     /**
      * Create or modify a link (to modify, don't forgot the ID !).
      *
-     * @param id Link's ID. You can enforce one or let it be null (not the permalink id. Don't be confuse!)
+     * @param ID Link's ID. You can enforce one or let it be null (not the permalink id. Don't be confuse!)
      * @param url Link's URL
      * @param title Link's title
      * @param description Link's description
@@ -215,7 +225,39 @@ public class ShaarliClient
      * @param restricted Is the link private ?
      * @return id Link's ID
      */
-    public String createOrUpdateLink( final String id ,
+    public String createOrUpdateLink( final Date ID ,
+                                      final String url ,
+                                      final String title ,
+                                      final String description ,
+                                      final Set<String> tags ,
+                                      final boolean restricted )
+    {
+        final String IDstr = df.format( ID );
+        if ( IDstr == null || IDstr.isEmpty() )
+        {
+            throw new IllegalArgumentException( "Wrong date parsing" );
+        }
+
+        return createOrUpdateLink( IDstr ,
+                                   url ,
+                                   title ,
+                                   description ,
+                                   tags ,
+                                   restricted );
+    }
+
+    /**
+     * Create or modify a link (to modify, don't forgot the ID !).
+     *
+     * @param ID Link's ID. You can enforce one or let it be null (not the permalink id. Don't be confuse!)
+     * @param url Link's URL
+     * @param title Link's title
+     * @param description Link's description
+     * @param tags Links tags (set, no duplicate please)
+     * @param restricted Is the link private ?
+     * @return id Link's ID
+     */
+    public String createOrUpdateLink( final String ID ,
                                       final String url ,
                                       final String title ,
                                       final String description ,
@@ -230,7 +272,7 @@ public class ShaarliClient
         if ( LOGGER.isDebugEnabled() )
         {
             LOGGER.debug(
-                "[" + getClass().getSimpleName() + "] createOrUpdateLink() : id=" + id + " / url=" + url + " / title=" + title + " / description=" + description + " / restricted=" + restricted );
+                "[" + getClass().getSimpleName() + "] createOrUpdateLink() : ID=" + ID + " / url=" + url + " / title=" + title + " / description=" + description + " / restricted=" + restricted );
         }
 
         final String token;
@@ -254,18 +296,8 @@ public class ShaarliClient
 
             final List<BasicNameValuePair> nvps = new ArrayList<>();
 
-            String returnID;
-            if ( id == null )
-            {
-                returnID = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
-                                                 Locale.ENGLISH ).format( new Date() );
-            }
-            else
-            {
-                returnID = id;
-            }
             nvps.add( new BasicNameValuePair( "lf_linkdate" ,
-                                              returnID ) );
+                                              ID ) );
 
             nvps.add( new BasicNameValuePair( "lf_url" ,
                                               url ) );
@@ -327,7 +359,7 @@ public class ShaarliClient
                 }
             }
 
-            return returnID;
+            return ID;
         }
         catch( final IOException ex )
         {
@@ -354,12 +386,34 @@ public class ShaarliClient
     /**
      * Delete a link.
      *
-     * @param id Link's id (not the permalink id. Don't be confuse!)
+     * @param ID Link's id (not the permalink id. Don't be confuse!)
      * @return deleted or not
      */
-    public boolean delete( final String id )
+    public boolean delete( final Date ID )
     {
-        if ( id == null )
+        if ( ID == null )
+        {
+            throw new IllegalArgumentException();
+        }
+
+        final String IDstr = df.format( ID );
+        if ( IDstr == null || IDstr.isEmpty() )
+        {
+            return false;
+        }
+
+        return delete( IDstr );
+    }
+
+    /**
+     * Delete a link.
+     *
+     * @param ID Link's id (not the permalink id. Don't be confuse!)
+     * @return deleted or not
+     */
+    public boolean delete( final String ID )
+    {
+        if ( ID == null )
         {
             throw new IllegalArgumentException();
         }
@@ -367,7 +421,7 @@ public class ShaarliClient
         if ( LOGGER.isDebugEnabled() )
         {
             LOGGER.debug(
-                "[" + getClass().getSimpleName() + "] delete() : id=" + id );
+                "[" + getClass().getSimpleName() + "] delete() : ID=" + ID );
         }
 
         final String token;
@@ -391,7 +445,7 @@ public class ShaarliClient
             final List<BasicNameValuePair> nvps = new ArrayList<>();
 
             nvps.add( new BasicNameValuePair( "lf_linkdate" ,
-                                              id ) );
+                                              ID ) );
 
             nvps.add( new BasicNameValuePair( "delete_link" ,
                                               "" ) );
@@ -435,6 +489,31 @@ public class ShaarliClient
                     throw new RuntimeException( ex );
                 }
             }
+        }
+    }
+
+    public void deleteAll()
+    {
+        if ( LOGGER.isDebugEnabled() )
+        {
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] deleteAll()" );
+        }
+
+        // Find all IDs
+        final HashSet<String> IDs = new HashSet<>();
+
+        final Iterator<ShaarliLink> it = searchAllIterator();
+        while ( it.hasNext() )
+        {
+            final ShaarliLink link = it.next();
+            IDs.add( link.getID() );
+        }
+
+        // Delete all
+        for ( final String ID : IDs )
+        {
+            delete( ID );
         }
     }
 
@@ -780,6 +859,8 @@ public class ShaarliClient
     private final HttpClient client;
     private final PoolingClientConnectionManager cm;
     private final String endpoint;
+    private SimpleDateFormat df;
+    private SimpleDateFormat dfPerma;
 
     private String getToken( final String execURL )
         throws IOException
@@ -918,11 +999,7 @@ public class ShaarliClient
                                 restricted = false;
                             }
 
-                            String ID = elt.select( "input[name=lf_linkdate]" ).attr( "value" ).trim();
-                            if ( ID.isEmpty() )
-                            {
-                                ID = null;
-                            }
+                            final String ID = extractID( elt );
 
                             String permaID = elt.select( "a[name]" ).attr( "id" ).trim();
                             if ( permaID.isEmpty() )
@@ -999,6 +1076,32 @@ public class ShaarliClient
                     throw new RuntimeException( ex );
                 }
             }
+        }
+    }
+
+    private String extractID( final Element elt )
+    {
+        final String IDstr = elt.select( "input[name=lf_linkdate]" ).attr( "value" ).trim();
+        if ( !IDstr.isEmpty() )
+        {
+            return IDstr;
+        }
+
+        final String dateParse = elt.select( "span.linkdate" ).text().trim();
+        final String[] dateParses = dateParse.split( " - " );
+        if ( dateParses.length <= 0 )
+        {
+            return null;
+        }
+
+        try
+        {
+            final Date ret = dfPerma.parse( dateParses[0] );
+            return df.format( ret );
+        }
+        catch( final ParseException ex )
+        {
+            return null;
         }
     }
 
