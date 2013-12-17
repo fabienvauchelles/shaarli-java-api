@@ -842,6 +842,78 @@ public class ShaarliClient
         }
     }
 
+    public int getLinksCount()
+    {
+        if ( LOGGER.isDebugEnabled() )
+        {
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] getLinksCount()" );
+        }
+
+        HttpEntity responseEntity = null;
+        try
+        {
+            // Exec request
+            final HttpGet get = new HttpGet( endpoint );
+
+            final HttpResponse response = client.execute( get );
+            responseEntity = response.getEntity();
+
+            final StatusLine sl = response.getStatusLine();
+            if ( sl.getStatusCode() != 200 )
+            {
+                throw new IOException();
+            }
+
+            try( final InputStream is = responseEntity.getContent() )
+            {
+                final Document doc = Jsoup.parse( is ,
+                                                  "UTF-8" ,
+                                                  endpoint );
+
+                final Pattern p = Pattern.compile( "\\d+" );
+                final Matcher m = p.matcher( doc.select( "#pageheader div.nomobile" ).text().trim() );
+                if ( m.find() )
+                {
+                    final String countStr = m.group();
+                    try
+                    {
+                        return Integer.parseInt( countStr );
+                    }
+                    catch( final NumberFormatException ex )
+                    {
+                        throw new RuntimeException( ex );
+                    }
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+        catch( final IOException ex )
+        {
+            LOGGER.error( "Cannot get page count" ,
+                          ex );
+
+            return 0;
+        }
+        finally
+        {
+            if ( responseEntity != null )
+            {
+                try
+                {
+                    EntityUtils.consume( responseEntity );
+                }
+                catch( final IOException ex )
+                {
+                    throw new RuntimeException( ex );
+                }
+            }
+        }
+    }
+
     /**
      * Close the Shaarli connection.
      */
