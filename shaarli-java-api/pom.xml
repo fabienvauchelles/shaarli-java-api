@@ -25,7 +25,7 @@ MA 02110-1301  USA
     <parent>
         <groupId>com.vaushell</groupId>
         <artifactId>pom-library</artifactId>
-        <version>2</version>
+        <version>3</version>
     </parent>
 
     <groupId>com.vaushell</groupId>
