@@ -232,7 +232,7 @@ public class ShaarliClient
                                       final Set<String> tags ,
                                       final boolean restricted )
     {
-        final String IDstr = df.format( ID );
+        final String IDstr = convertIDdateToString( ID );
         if ( IDstr == null || IDstr.isEmpty() )
         {
             throw new IllegalArgumentException( "Wrong date parsing" );
@@ -396,7 +396,7 @@ public class ShaarliClient
             throw new IllegalArgumentException();
         }
 
-        final String IDstr = df.format( ID );
+        final String IDstr = convertIDdateToString( ID );
         if ( IDstr == null || IDstr.isEmpty() )
         {
             return false;
@@ -853,6 +853,23 @@ public class ShaarliClient
             cm.shutdown();
         }
     }
+
+    public String convertIDdateToString( final Date date )
+    {
+        return df.format( date );
+    }
+
+    public Date convertIDstringToDate( final String ID )
+    {
+        try
+        {
+            return df.parse( ID );
+        }
+        catch( final ParseException ex )
+        {
+            return null;
+        }
+    }
     // PRIVATE
     private static final int MAX_LINKS_BY_PAGE = 100;
     private static final Logger LOGGER = LoggerFactory.getLogger( ShaarliClient.class );
@@ -1097,7 +1114,7 @@ public class ShaarliClient
         try
         {
             final Date ret = dfPerma.parse( dateParses[0] );
-            return df.format( ret );
+            return convertIDdateToString( ret );
         }
         catch( final ParseException ex )
         {
