@@ -180,7 +180,7 @@ public class ShaarliClient
      * @param description Link's description
      * @param tags tags (set, no duplicate please)
      * @param restricted Is the link private ?
-     * @return generated id
+     * @return generated id (no way to detect if created or not! Use getLinksCount())
      */
     public String createLink( final String url ,
                               final String title ,
@@ -188,7 +188,7 @@ public class ShaarliClient
                               final Set<String> tags ,
                               final boolean restricted )
     {
-        return createOrUpdateLink( new Date() ,
+        return createOrUpdateLink( generateDateID() ,
                                    url ,
                                    title ,
                                    description ,
@@ -205,7 +205,7 @@ public class ShaarliClient
      * @param description Link's description
      * @param tags Links tags (set, no duplicate please)
      * @param restricted Is the link private ?
-     * @return id Link's ID
+     * @return id Link's ID (no way to detect if created or not! Use getLinksCount())
      */
     public String createOrUpdateLink( final Date ID ,
                                       final String url ,
@@ -214,13 +214,7 @@ public class ShaarliClient
                                       final Set<String> tags ,
                                       final boolean restricted )
     {
-        final String IDstr = convertIDdateToString( ID );
-        if ( IDstr == null || IDstr.isEmpty() )
-        {
-            throw new IllegalArgumentException( "Wrong date parsing" );
-        }
-
-        return createOrUpdateLink( IDstr ,
+        return createOrUpdateLink( convertIDdateToString( ID ) ,
                                    url ,
                                    title ,
                                    description ,
@@ -237,7 +231,7 @@ public class ShaarliClient
      * @param description Link's description
      * @param tags Links tags (set, no duplicate please)
      * @param restricted Is the link private ?
-     * @return id Link's ID
+     * @return id Link's ID (no way to detect if created or not! Use getLinksCount())
      */
     public String createOrUpdateLink( final String ID ,
                                       final String url ,
@@ -478,6 +472,9 @@ public class ShaarliClient
         }
     }
 
+    /**
+     * Delete all links.
+     */
     public void deleteAll()
     {
         if ( LOGGER.isDebugEnabled() )
@@ -832,6 +829,11 @@ public class ShaarliClient
         }
     }
 
+    /**
+     * Return the number of links.
+     *
+     * @return Links count
+     */
     public int getLinksCount()
     {
         if ( LOGGER.isDebugEnabled() )
@@ -921,20 +923,46 @@ public class ShaarliClient
         }
     }
 
+    /**
+     * Convert a Date ID to a String ID.
+     *
+     * @param date the Date ID
+     * @return the String ID
+     */
     public String convertIDdateToString( final Date date )
     {
-        return df.format( date );
-    }
-
-    public Date convertIDstringToDate( final String ID )
-    {
-        try
-        {
-            return df.parse( ID );
-        }
-        catch( final ParseException ex )
+        if ( date == null )
         {
             return null;
+        }
+        else
+        {
+            return df.format( date );
+        }
+    }
+
+    /**
+     * Convert a String ID to a Date ID.
+     *
+     * @param ID the String ID
+     * @return the Date ID
+     */
+    public Date convertIDstringToDate( final String ID )
+    {
+        if ( ID == null )
+        {
+            return null;
+        }
+        else
+        {
+            try
+            {
+                return df.parse( ID );
+            }
+            catch( final ParseException ex )
+            {
+                return null;
+            }
         }
     }
     // PRIVATE
@@ -1274,6 +1302,38 @@ public class ShaarliClient
         else
         {
             return url;
+        }
+    }
+
+    private Long lastGeneratedDate;
+
+    private Date generateDateID()
+    {
+        synchronized( this )
+        {
+            if ( lastGeneratedDate != null )
+            {
+                long diff = System.currentTimeMillis() - lastGeneratedDate;
+                while ( diff < 1000 )
+                {
+                    try
+                    {
+                        // It's better than a Thread.sleep in a synchronized block
+                        wait( 1000 - diff );
+                    }
+                    catch( final InterruptedException ex )
+                    {
+                        // Ignore
+                    }
+
+                    diff = System.currentTimeMillis() - lastGeneratedDate;
+                }
+            }
+
+            final Date t = new Date();
+            lastGeneratedDate = t.getTime();
+
+            return t;
         }
     }
 }
