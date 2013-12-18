@@ -54,7 +54,13 @@ public class ShaarliClientTest
         throws ConfigurationException
     {
         // My config
-        final XMLConfiguration config = new XMLConfiguration( "conf-local/configuration.xml" );
+        String conf = System.getProperty( "conf" );
+        if ( conf == null )
+        {
+            conf = "conf-local/configuration.xml";
+        }
+
+        final XMLConfiguration config = new XMLConfiguration( conf );
 
         clientUnauth = new ShaarliClient( config.getString( "shaarli.endpoint" ) );
 
