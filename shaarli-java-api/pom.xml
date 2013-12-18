@@ -30,7 +30,7 @@ MA 02110-1301  USA
 
     <groupId>com.vaushell</groupId>
     <artifactId>shaarli-java-api</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>shaarli-java-api</name>
@@ -70,7 +70,7 @@ MA 02110-1301  USA
         <connection>scm:git:${project.url}.git</connection>
         <developerConnection>scm:git:${project.url}.git</developerConnection>
         <url>${project.url}</url>
-        <tag>shaarli-java-api-1.0.4</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <build>
