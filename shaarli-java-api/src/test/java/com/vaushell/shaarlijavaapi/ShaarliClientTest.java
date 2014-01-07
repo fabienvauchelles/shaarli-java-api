@@ -22,6 +22,7 @@ package com.vaushell.shaarlijavaapi;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -371,6 +372,93 @@ public class ShaarliClientTest
         assertEquals( "Search should find the good result" ,
                       "Blog de Fabien Vauchelles n°1" ,
                       link.getTitle() );
+    }
+
+    /**
+     * Test tags creation.
+     */
+    @Test
+    public void testTags()
+    {
+        // Create link 1
+        final TreeSet<String> tags = new TreeSet<>();
+        tags.add( "java" );
+        tags.add( "coding" );
+
+        final String ID = clientAuth.createLink( "http://fabien.vauchelles.com/" ,
+                                                 "Blog de Fabien Vauchelles n°" ,
+                                                 "Du coooodde rahhh::!!!!! #" ,
+                                                 tags ,
+                                                 false );
+
+        assertTrue( "ID should be assigned" ,
+                    ID != null && !ID.isEmpty() );
+
+        // Create link 2
+        final TreeSet<String> tags2 = new TreeSet<>();
+        tags2.add( "java" );
+        tags2.add( "blogging" );
+
+        final String ID2 = clientAuth.createLink( "http://www.vauchelles.com/" ,
+                                                  "Site Vauchelles n°" ,
+                                                  "Stout" ,
+                                                  tags2 ,
+                                                  false );
+
+        assertTrue( "ID should be assigned" ,
+                    ID2 != null && !ID2.isEmpty() );
+
+        final Map<String , Integer> atags = clientAuth.getTags();
+        assertEquals( "Tags count must be 3" ,
+                      3 ,
+                      atags.size() );
+
+        assertEquals( "Keyword 'blogging' must exists 1 time" ,
+                      1 ,
+                      (int) atags.get( "blogging" ) );
+        assertEquals( "Keyword 'coding' must exists 1 time" ,
+                      1 ,
+                      (int) atags.get( "coding" ) );
+        assertEquals( "Keyword 'java' must exists 2 times" ,
+                      2 ,
+                      (int) atags.get( "java" ) );
+    }
+
+    /**
+     * Test setLinksByPage.
+     */
+    @Test
+    public void testSetLinksByPage()
+    {
+        // Create
+        Date t = new Date();
+        for ( int i = 0 ; i < 10 ; i++ )
+        {
+            final TreeSet<String> tags = new TreeSet<>();
+            tags.add( "tagfix" );
+            tags.add( "tag" + i );
+
+            clientAuth.createOrUpdateLink( t ,
+                                           "http://fabien.vauchelles.com/" + i ,
+                                           "Blog de Fabien Vauchelles n°" + i ,
+                                           "du java quoi! #" + i ,
+                                           tags ,
+                                           false );
+
+            t = new Date( t.getTime() + 1000 );
+        }
+
+        for ( int i = 1 ; i <= 10 ; i++ )
+        {
+            clientAuth.setLinksByPage( i );
+
+            final List<ShaarliLink> links = clientAuth.searchAll( 1 );
+
+            assertEquals( "Links set and count must match" ,
+                          i ,
+                          links.size() );
+        }
+
     }
 
     // PRIVATE
