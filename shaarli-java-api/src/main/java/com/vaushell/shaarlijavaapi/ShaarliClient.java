@@ -82,7 +82,9 @@ public class ShaarliClient
         this.endpoint = cleanEnding( endpoint );
         this.df = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
                                         Locale.ENGLISH );
-        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy -" ,
+//        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy -" ,
+//                                             Locale.ENGLISH );
+        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy" ,
                                              Locale.ENGLISH );
 
         this.client = client;
@@ -526,25 +528,34 @@ public class ShaarliClient
                                                           "UTF-8" ,
                                                           execURL );
 
-                        final Elements elts = doc.select( "#cloudtag *" );
+//                        final Elements elts = doc.select( "#cloudtag *" );
+                        final Elements elts = doc.select( "#cloudtag span" );
                         if ( elts != null )
                         {
                             final Iterator<Element> itElts = elts.iterator();
                             while ( itElts.hasNext() )
                             {
                                 final Element elt1 = itElts.next();
+//                                final String countStr = extract( elt1 ,
+//                                                                 "" ,
+//                                                                 "" ,
+//                                                                 "\\d+" );
                                 final String countStr = extract( elt1 ,
                                                                  "" ,
                                                                  "" ,
-                                                                 "" );
+                                                                 "\\d+" );
                                 if ( countStr == null )
                                 {
                                     throw new IOException( "Error during parsing" );
                                 }
 
                                 final Element elt2 = itElts.next();
+//                                final String name = extract( elt2 ,
+//                                                             "a" ,
+//                                                             "" ,
+//                                                             "" );
                                 final String name = extract( elt2 ,
-                                                             "a" ,
+                                                             "" ,
                                                              "" ,
                                                              "" );
                                 if ( name == null )
@@ -554,7 +565,7 @@ public class ShaarliClient
 
                                 try
                                 {
-                                    tags.put( name ,
+                                    tags.put( name.toLowerCase() ,
                                               Integer.parseInt( countStr ) );
                                 }
                                 catch( final NumberFormatException ex )
@@ -1022,6 +1033,10 @@ public class ShaarliClient
                                                       "UTF-8" ,
                                                       execURL );
 
+//                    return extract( doc ,
+//                                    "input[name=token]" ,
+//                                    "value" ,
+//                                    null );
                     return extract( doc ,
                                     "input[name=token]" ,
                                     "value" ,
@@ -1118,24 +1133,33 @@ public class ShaarliClient
                                                           "UTF-8" ,
                                                           execURL );
 
-                        final String linkCSSpath = "ul li";
+//                        final String linkCSSpath = "ul li";
+                        final String linkCSSpath = "table.article";
                         final Elements elts = doc.select( linkCSSpath );
                         if ( elts != null )
                         {
                             for ( final Element elt : elts )
                             {
+//                                final String restrictedStr = extract( elt ,
+//                                                                      "" ,
+//                                                                      "class" ,
+//                                                                      "" );
                                 final String restrictedStr = extract( elt ,
+                                                                      "td[class=private]" ,
                                                                       "" ,
-                                                                      "class" ,
                                                                       "" );
 
-                                final boolean restricted = "private".equals( restrictedStr );
+                                final boolean restricted = restrictedStr != null;
 
                                 String ID;
+//                                final String dateStr = extract( elt ,
+//                                                                "span.linkdate" ,
+//                                                                "" ,
+//                                                                ".* - " );
                                 final String dateStr = extract( elt ,
-                                                                "span.linkdate" ,
+                                                                "td[class=id]" ,
                                                                 "" ,
-                                                                ".* - " );
+                                                                "" );
                                 if ( dateStr == null )
                                 {
                                     ID = null;
@@ -1152,24 +1176,40 @@ public class ShaarliClient
                                     }
                                 }
 
+//                                final String permaID = extract( elt ,
+//                                                                "a[name]" ,
+//                                                                "id" ,
+//                                                                "" );
                                 final String permaID = extract( elt ,
-                                                                "a[name]" ,
+                                                                "a[class=permalink]" ,
                                                                 "id" ,
                                                                 "" );
 
+//                                final String title = extract( elt ,
+//                                                              "span[class=linktitle]" ,
+//                                                              "" ,
+//                                                              "" );
                                 final String title = extract( elt ,
-                                                              "span[class=linktitle]" ,
+                                                              "a[class=title]" ,
                                                               "" ,
                                                               "" );
 
+//                                final String description = extract( elt ,
+//                                                                    "div[class=linkdescription]" ,
+//                                                                    "" ,
+//                                                                    "" );
                                 final String description = extract( elt ,
-                                                                    "div[class=linkdescription]" ,
+                                                                    "span[class=description]" ,
                                                                     "" ,
                                                                     "" );
 
+//                                final String url = extract( elt ,
+//                                                            "span[class=linkurl]" ,
+//                                                            "" ,
+//                                                            "" );
                                 final String url = extract( elt ,
-                                                            "span[class=linkurl]" ,
-                                                            "" ,
+                                                            "a[class=title]" ,
+                                                            "href" ,
                                                             "" );
 
                                 final ShaarliLink link = new ShaarliLink( ID ,
@@ -1179,18 +1219,23 @@ public class ShaarliClient
                                                                           url ,
                                                                           restricted );
 
-                                final Elements eltsTag = elt.select( "div[class=linktaglist] a" );
+//                                final Elements eltsTag = elt.select( "div[class=linktaglist] a" );
+                                final Elements eltsTag = elt.select( "tr[class=tag] a" );
                                 if ( eltsTag != null )
                                 {
                                     for ( final Element eltTag : eltsTag )
                                     {
+//                                        final String tag = extract( eltTag ,
+//                                                                    "" ,
+//                                                                    "" ,
+//                                                                    "" );
                                         final String tag = extract( eltTag ,
                                                                     "" ,
                                                                     "" ,
                                                                     "" );
                                         if ( tag != null )
                                         {
-                                            link.addTag( tag );
+                                            link.addTag( tag.toLowerCase() );
                                         }
                                     }
                                 }
