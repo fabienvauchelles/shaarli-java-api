@@ -102,7 +102,7 @@ public class ShaarliClient
         this.endpoint = cleanEnding( endpoint );
         this.df = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
                                         Locale.ENGLISH );
-        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy" ,
+        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy -" ,
                                              Locale.ENGLISH );
 
         this.client = HttpClientBuilder
@@ -536,14 +536,42 @@ public class ShaarliClient
                                                           execURL );
 
                         final Elements elts = doc.select( "#cloudtag *" );
-                        final Iterator<Element> itElts = elts.iterator();
-                        while ( itElts.hasNext() )
+                        if ( elts != null )
                         {
-                            final int count = Integer.parseInt( itElts.next().text() );
-                            final String name = itElts.next().text();
+                            final Iterator<Element> itElts = elts.iterator();
+                            while ( itElts.hasNext() )
+                            {
+                                final Element elt1 = itElts.next();
+                                final String countStr = extract( elt1 ,
+                                                                 "" ,
+                                                                 "" ,
+                                                                 "" );
+                                if ( countStr == null )
+                                {
+                                    throw new IOException( "Error during parsing" );
+                                }
 
-                            tags.put( name ,
-                                      count );
+                                final Element elt2 = itElts.next();
+                                final String name = extract( elt2 ,
+                                                             "a" ,
+                                                             "" ,
+                                                             "" );
+                                if ( name == null )
+                                {
+                                    throw new IOException( "Error during parsing" );
+                                }
+
+                                try
+                                {
+                                    tags.put( name ,
+                                              Integer.parseInt( countStr ) );
+                                }
+                                catch( final NumberFormatException ex )
+                                {
+                                    throw new IOException( "Error during parsing" ,
+                                                           ex );
+                                }
+                            }
                         }
 
                         return tags;
@@ -864,23 +892,24 @@ public class ShaarliClient
                                                       "UTF-8" ,
                                                       endpoint );
 
-                    final Pattern p = Pattern.compile( "\\d+" );
-                    final Matcher m = p.matcher( doc.select( "#pageheader div.nomobile" ).text().trim() );
-                    if ( m.find() )
+                    final String countStr = extract( doc ,
+                                                     "#pageheader div.nomobile" ,
+                                                     "" ,
+                                                     "\\d+" );
+                    if ( countStr == null )
                     {
-                        final String countStr = m.group();
+                        return 0;
+                    }
+                    else
+                    {
                         try
                         {
                             return Integer.parseInt( countStr );
                         }
                         catch( final NumberFormatException ex )
                         {
-                            throw new RuntimeException( ex );
+                            return 0;
                         }
-                    }
-                    else
-                    {
-                        return 0;
                     }
                 }
             }
@@ -998,15 +1027,10 @@ public class ShaarliClient
                                                       "UTF-8" ,
                                                       execURL );
 
-                    final Elements elts = doc.select( "input[name=token]" );
-                    if ( elts == null || elts.size() <= 0 )
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        return elts.get( 0 ).attr( "value" );
-                    }
+                    return extract( doc ,
+                                    "input[name=token]" ,
+                                    "value" ,
+                                    null );
                 }
             }
         }
@@ -1099,47 +1123,59 @@ public class ShaarliClient
                                                           "UTF-8" ,
                                                           execURL );
 
-                        final Elements elts = doc.select( "ul li" );
+                        final String linkCSSpath = "ul li";
+                        final Elements elts = doc.select( linkCSSpath );
                         if ( elts != null )
                         {
                             for ( final Element elt : elts )
                             {
-                                final boolean restricted;
-                                final String cssClass = elt.attr( "class" );
-                                if ( "private".equals( cssClass ) )
+                                final String restrictedStr = extract( elt ,
+                                                                      "" ,
+                                                                      "class" ,
+                                                                      "" );
+
+                                final boolean restricted = "private".equals( restrictedStr );
+
+                                String ID;
+                                final String dateStr = extract( elt ,
+                                                                "span.linkdate" ,
+                                                                "" ,
+                                                                ".* - " );
+                                if ( dateStr == null )
                                 {
-                                    restricted = true;
+                                    ID = null;
                                 }
                                 else
                                 {
-                                    restricted = false;
+                                    try
+                                    {
+                                        ID = convertIDdateToString( dfPerma.parse( dateStr ) );
+                                    }
+                                    catch( final ParseException ex )
+                                    {
+                                        ID = null;
+                                    }
                                 }
 
-                                final String ID = extractID( elt );
+                                final String permaID = extract( elt ,
+                                                                "a[name]" ,
+                                                                "id" ,
+                                                                "" );
 
-                                String permaID = elt.select( "a[name]" ).attr( "id" ).trim();
-                                if ( permaID.isEmpty() )
-                                {
-                                    permaID = null;
-                                }
+                                final String title = extract( elt ,
+                                                              "span[class=linktitle]" ,
+                                                              "" ,
+                                                              "" );
 
-                                String title = elt.select( "span[class=linktitle]" ).text().trim();
-                                if ( title.isEmpty() )
-                                {
-                                    title = null;
-                                }
+                                final String description = extract( elt ,
+                                                                    "div[class=linkdescription]" ,
+                                                                    "" ,
+                                                                    "" );
 
-                                String description = elt.select( "div[class=linkdescription]" ).text().trim();
-                                if ( description.isEmpty() )
-                                {
-                                    description = null;
-                                }
-
-                                String url = elt.select( "span[class=linkurl]" ).text().trim();
-                                if ( url.isEmpty() )
-                                {
-                                    url = null;
-                                }
+                                final String url = extract( elt ,
+                                                            "span[class=linkurl]" ,
+                                                            "" ,
+                                                            "" );
 
                                 final ShaarliLink link = new ShaarliLink( ID ,
                                                                           permaID ,
@@ -1153,8 +1189,11 @@ public class ShaarliClient
                                 {
                                     for ( final Element eltTag : eltsTag )
                                     {
-                                        final String tag = eltTag.text().trim();
-                                        if ( !tag.isEmpty() )
+                                        final String tag = extract( eltTag ,
+                                                                    "" ,
+                                                                    "" ,
+                                                                    "" );
+                                        if ( tag != null )
                                         {
                                             link.addTag( tag );
                                         }
@@ -1193,32 +1232,6 @@ public class ShaarliClient
                     throw new RuntimeException( ex );
                 }
             }
-        }
-    }
-
-    private String extractID( final Element elt )
-    {
-        final String IDstr = elt.select( "input[name=lf_linkdate]" ).attr( "value" ).trim();
-        if ( !IDstr.isEmpty() )
-        {
-            return IDstr;
-        }
-
-        final String dateParse = elt.select( "span.linkdate" ).text().trim();
-        final String[] dateParses = dateParse.split( " - " );
-        if ( dateParses.length <= 0 )
-        {
-            return null;
-        }
-
-        try
-        {
-            final Date ret = dfPerma.parse( dateParses[0] );
-            return convertIDdateToString( ret );
-        }
-        catch( final ParseException ex )
-        {
-            return null;
         }
     }
 
@@ -1335,5 +1348,64 @@ public class ShaarliClient
 
             return t;
         }
+    }
+
+    private static String extract( final Element source ,
+                                   final String cssPath ,
+                                   final String attr ,
+                                   final String regexp )
+    {
+        if ( source == null )
+        {
+            throw new IllegalArgumentException();
+        }
+
+        final Element elt;
+        if ( cssPath == null || cssPath.isEmpty() )
+        {
+            elt = source;
+        }
+        else
+        {
+            final Elements elts = source.select( cssPath );
+            if ( elts.isEmpty() )
+            {
+                return null;
+            }
+
+            elt = elts.first();
+        }
+
+        String content;
+        if ( attr == null || attr.isEmpty() )
+        {
+            content = elt.text();
+        }
+        else
+        {
+            content = elt.attr( attr );
+        }
+        if ( content == null )
+        {
+            return null;
+        }
+        content = content.trim();
+
+        if ( regexp != null && !regexp.isEmpty() )
+        {
+            final Pattern p = Pattern.compile( regexp );
+            final Matcher m = p.matcher( content );
+            if ( m.find() )
+            {
+                content = m.group().trim();
+            }
+        }
+
+        if ( content.isEmpty() )
+        {
+            return null;
+        }
+
+        return content;
     }
 }
