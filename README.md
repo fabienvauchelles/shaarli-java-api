@@ -1,24 +1,24 @@
-# shaarli-java-api
+<h1>shaarli-java-api</h1>
 
-shaarli-java-api is a java client api for Sebsauvage's [Shaarli](http://sebsauvage.net/wiki/doku.php?id=php:shaarli).
+shaarli-java-api is a java client api for Sebsauvage's <a href="http://sebsauvage.net/wiki/doku.php?id=php:shaarli">Shaarli</a>.
 
-You can find a tutorial [here](http://fabien.vauchelles.com/shaarli-java-api) (in french).
+You can find a tutorial <a href="http://fabien.vauchelles.com/shaarli-java-api">here</a> (in french).
 
-## Why use shaarli ?
+<h2>Why use shaarli ?</h2>
 
-It's [KISS](http://en.wikipedia.org/wiki/KISS_principle).
+It's <a href="http://en.wikipedia.org/wiki/KISS_principle">KISS</a>.
 
-## Why use shaarli-java-api ?
+<h2>Why use shaarli-java-api ?</h2>
 
 Just a few reasons :
 <ul>
-<li>it's <b>[KISS](http://en.wikipedia.org/wiki/KISS_principle)</b> (again, it's boring?) ;</li>
+<li>it's <b><a href="http://en.wikipedia.org/wiki/KISS_principle">KISS</a> (again, it's boring?) ;</li>
 <li>it's <b>fast</b> (based on Apache Http Client) ;</li>
 <li>it's <b>easy</b> to deploy with Maven ;</li>
 <li>it's <b>safe</b> (with unit tests, a code control with <a href="http://checkstyle.sourceforge.net/">Checkstyle</a>, <a href="http://pmd.sourceforge.net/">PMD</a> and <a href="http://findbugs.sourceforge.net/">Findbugs</a>) ;</li>
 </ul>
 
-## Which features can i use ?
+<h2>Which features can i use ?</h2>
 
 You can :
 <ul>
@@ -32,7 +32,7 @@ You can :
 <li>Define your own hooks to use a template.</li>
 </ul>
 
-## How to use it ?
+<h2>How to use it ?</h2>
 
 <ol>
 <li>Add this to your pom.xml file :
@@ -52,7 +52,7 @@ You can :
 <li>Do it in your code !</li>
 </ol>
 
-## Licence
+<h2>Licence</h2>
 
-See [LICENCE.txt](https://github.com/fabienvauchelles/shaarli-java-api/blob/master/LICENCE.txt).
+See <a href="https://github.com/fabienvauchelles/shaarli-java-api/blob/master/LICENCE.txt">LICENCE.txt</a>.
 
