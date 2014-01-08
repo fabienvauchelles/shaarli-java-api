@@ -66,12 +66,14 @@ public class ShaarliClient
 {
     // PUBLIC
     /**
-     * Construct the DAO with a specific http client.
+     * Construct the DAO with specifics http client and templates.
      *
      * @param client Specific HTTP client
+     * @param templates Shaarli templates (if you don't use the default one)
      * @param endpoint Shaarli endpoint (like http://fabien.vauchelles.com/~fabien/shaarli)
      */
     public ShaarliClient( final CloseableHttpClient client ,
+                          final ShaarliTemplates templates ,
                           final String endpoint )
     {
         if ( client == null || endpoint == null )
@@ -80,14 +82,28 @@ public class ShaarliClient
         }
 
         this.endpoint = cleanEnding( endpoint );
-        this.df = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
-                                        Locale.ENGLISH );
-//        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy -" ,
-//                                             Locale.ENGLISH );
-        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy" ,
-                                             Locale.ENGLISH );
 
         this.client = client;
+
+        this.templates = templates;
+    }
+
+    /**
+     * Construct the DAO with specifics templates.
+     *
+     * @param templates Shaarli templates (if you don't use the default one)
+     * @param endpoint Shaarli endpoint (like http://fabien.vauchelles.com/~fabien/shaarli)
+     */
+    public ShaarliClient( final ShaarliTemplates templates ,
+                          final String endpoint )
+    {
+        this( HttpClientBuilder
+            .create()
+            .setDefaultCookieStore( new BasicCookieStore() )
+            .setUserAgent( "Mozilla/5.0 (Windows NT 5.1; rv:15.0) Gecko/20100101 Firefox/15.0.1" )
+            .build() ,
+              templates ,
+              endpoint );
     }
 
     /**
@@ -97,11 +113,7 @@ public class ShaarliClient
      */
     public ShaarliClient( final String endpoint )
     {
-        this( HttpClientBuilder
-            .create()
-            .setDefaultCookieStore( new BasicCookieStore() )
-            .setUserAgent( "Mozilla/5.0 (Windows NT 5.1; rv:15.0) Gecko/20100101 Firefox/15.0.1" )
-            .build() ,
+        this( new ShaarliTemplates() ,
               endpoint );
     }
 
@@ -528,36 +540,21 @@ public class ShaarliClient
                                                           "UTF-8" ,
                                                           execURL );
 
-//                        final Elements elts = doc.select( "#cloudtag *" );
-                        final Elements elts = doc.select( "#cloudtag span" );
+                        final Elements elts = doc.select( templates.get( "cloudtag" ).cssPath );
                         if ( elts != null )
                         {
                             final Iterator<Element> itElts = elts.iterator();
                             while ( itElts.hasNext() )
                             {
-                                final Element elt1 = itElts.next();
-//                                final String countStr = extract( elt1 ,
-//                                                                 "" ,
-//                                                                 "" ,
-//                                                                 "\\d+" );
-                                final String countStr = extract( elt1 ,
-                                                                 "" ,
-                                                                 "" ,
-                                                                 "\\d+" );
+                                final String countStr = extract( itElts.next() ,
+                                                                 "cloudtag-count" );
                                 if ( countStr == null )
                                 {
                                     throw new IOException( "Error during parsing" );
                                 }
 
-                                final Element elt2 = itElts.next();
-//                                final String name = extract( elt2 ,
-//                                                             "a" ,
-//                                                             "" ,
-//                                                             "" );
-                                final String name = extract( elt2 ,
-                                                             "" ,
-                                                             "" ,
-                                                             "" );
+                                final String name = extract( itElts.next() ,
+                                                             "cloudtag-name" );
                                 if ( name == null )
                                 {
                                     throw new IOException( "Error during parsing" );
@@ -565,7 +562,7 @@ public class ShaarliClient
 
                                 try
                                 {
-                                    tags.put( name.toLowerCase() ,
+                                    tags.put( name.toLowerCase( Locale.ENGLISH ) ,
                                               Integer.parseInt( countStr ) );
                                 }
                                 catch( final NumberFormatException ex )
@@ -894,14 +891,8 @@ public class ShaarliClient
                                                       "UTF-8" ,
                                                       endpoint );
 
-//                    final String countStr = extract( doc ,
-//                                                     "#pageheader div.nomobile" ,
-//                                                     "" ,
-//                                                     "\\d+" );
                     final String countStr = extract( doc ,
-                                                     "form[name=searchform] input[class=medium]" ,
-                                                     "placeholder" ,
-                                                     "\\d+" );
+                                                     "links-count" );
                     if ( countStr == null )
                     {
                         return 0;
@@ -972,7 +963,8 @@ public class ShaarliClient
         }
         else
         {
-            return df.format( date );
+            return new SimpleDateFormat( templates.get( "id-dateformat" ).cssPath ,
+                                         Locale.ENGLISH ).format( date );
         }
     }
 
@@ -992,7 +984,8 @@ public class ShaarliClient
         {
             try
             {
-                return df.parse( ID );
+                return new SimpleDateFormat( templates.get( "id-dateformat" ).cssPath ,
+                                             Locale.ENGLISH ).parse( ID );
             }
             catch( final ParseException ex )
             {
@@ -1005,8 +998,7 @@ public class ShaarliClient
     private static final Logger LOGGER = LoggerFactory.getLogger( ShaarliClient.class );
     private final CloseableHttpClient client;
     private final String endpoint;
-    private SimpleDateFormat df;
-    private SimpleDateFormat dfPerma;
+    private final ShaarliTemplates templates;
 
     private String getToken( final String execURL )
         throws IOException
@@ -1033,14 +1025,8 @@ public class ShaarliClient
                                                       "UTF-8" ,
                                                       execURL );
 
-//                    return extract( doc ,
-//                                    "input[name=token]" ,
-//                                    "value" ,
-//                                    null );
                     return extract( doc ,
-                                    "input[name=token]" ,
-                                    "value" ,
-                                    null );
+                                    "token" );
                 }
             }
         }
@@ -1133,33 +1119,20 @@ public class ShaarliClient
                                                           "UTF-8" ,
                                                           execURL );
 
-//                        final String linkCSSpath = "ul li";
-                        final String linkCSSpath = "table.article";
+                        final String linkCSSpath = templates.get( "links" ).cssPath;
                         final Elements elts = doc.select( linkCSSpath );
                         if ( elts != null )
                         {
                             for ( final Element elt : elts )
                             {
-//                                final String restrictedStr = extract( elt ,
-//                                                                      "" ,
-//                                                                      "class" ,
-//                                                                      "" );
                                 final String restrictedStr = extract( elt ,
-                                                                      "td[class=private]" ,
-                                                                      "" ,
-                                                                      "" );
+                                                                      "links-private" );
 
                                 final boolean restricted = restrictedStr != null;
 
                                 String ID;
-//                                final String dateStr = extract( elt ,
-//                                                                "span.linkdate" ,
-//                                                                "" ,
-//                                                                ".* - " );
                                 final String dateStr = extract( elt ,
-                                                                "td[class=id]" ,
-                                                                "" ,
-                                                                "" );
+                                                                "links-id" );
                                 if ( dateStr == null )
                                 {
                                     ID = null;
@@ -1168,7 +1141,9 @@ public class ShaarliClient
                                 {
                                     try
                                     {
-                                        ID = convertIDdateToString( dfPerma.parse( dateStr ) );
+                                        ID = convertIDdateToString( new SimpleDateFormat(
+                                            templates.get( "permalink-dateformat" ).cssPath ,
+                                            Locale.ENGLISH ).parse( dateStr ) );
                                     }
                                     catch( final ParseException ex )
                                     {
@@ -1176,41 +1151,17 @@ public class ShaarliClient
                                     }
                                 }
 
-//                                final String permaID = extract( elt ,
-//                                                                "a[name]" ,
-//                                                                "id" ,
-//                                                                "" );
                                 final String permaID = extract( elt ,
-                                                                "a[class=permalink]" ,
-                                                                "id" ,
-                                                                "" );
+                                                                "links-permalink-id" );
 
-//                                final String title = extract( elt ,
-//                                                              "span[class=linktitle]" ,
-//                                                              "" ,
-//                                                              "" );
                                 final String title = extract( elt ,
-                                                              "a[class=title]" ,
-                                                              "" ,
-                                                              "" );
+                                                              "links-title" );
 
-//                                final String description = extract( elt ,
-//                                                                    "div[class=linkdescription]" ,
-//                                                                    "" ,
-//                                                                    "" );
                                 final String description = extract( elt ,
-                                                                    "span[class=description]" ,
-                                                                    "" ,
-                                                                    "" );
+                                                                    "links-description" );
 
-//                                final String url = extract( elt ,
-//                                                            "span[class=linkurl]" ,
-//                                                            "" ,
-//                                                            "" );
                                 final String url = extract( elt ,
-                                                            "a[class=title]" ,
-                                                            "href" ,
-                                                            "" );
+                                                            "links-url" );
 
                                 final ShaarliLink link = new ShaarliLink( ID ,
                                                                           permaID ,
@@ -1219,23 +1170,16 @@ public class ShaarliClient
                                                                           url ,
                                                                           restricted );
 
-//                                final Elements eltsTag = elt.select( "div[class=linktaglist] a" );
-                                final Elements eltsTag = elt.select( "tr[class=tag] a" );
+                                final Elements eltsTag = elt.select( templates.get( "tags" ).cssPath );
                                 if ( eltsTag != null )
                                 {
                                     for ( final Element eltTag : eltsTag )
                                     {
-//                                        final String tag = extract( eltTag ,
-//                                                                    "" ,
-//                                                                    "" ,
-//                                                                    "" );
                                         final String tag = extract( eltTag ,
-                                                                    "" ,
-                                                                    "" ,
-                                                                    "" );
+                                                                    "tags-tag" );
                                         if ( tag != null )
                                         {
-                                            link.addTag( tag.toLowerCase() );
+                                            link.addTag( tag.toLowerCase( Locale.ENGLISH ) );
                                         }
                                     }
                                 }
@@ -1390,24 +1334,28 @@ public class ShaarliClient
         }
     }
 
-    private static String extract( final Element source ,
-                                   final String cssPath ,
-                                   final String attr ,
-                                   final String regexp )
+    private String extract( final Element source ,
+                            final String templateName )
     {
         if ( source == null )
         {
             throw new IllegalArgumentException();
         }
 
+        final ShaarliTemplates.Template template = templates.get( templateName );
+        if ( template == null )
+        {
+            throw new IllegalArgumentException( "template '" + templateName + "' not found" );
+        }
+
         final Element elt;
-        if ( cssPath == null || cssPath.isEmpty() )
+        if ( template.cssPath.isEmpty() )
         {
             elt = source;
         }
         else
         {
-            final Elements elts = source.select( cssPath );
+            final Elements elts = source.select( template.cssPath );
             if ( elts.isEmpty() )
             {
                 return null;
@@ -1417,13 +1365,13 @@ public class ShaarliClient
         }
 
         String content;
-        if ( attr == null || attr.isEmpty() )
+        if ( template.attribut.isEmpty() )
         {
             content = elt.text();
         }
         else
         {
-            content = elt.attr( attr );
+            content = elt.attr( template.attribut );
         }
         if ( content == null )
         {
@@ -1431,9 +1379,9 @@ public class ShaarliClient
         }
         content = content.trim();
 
-        if ( regexp != null && !regexp.isEmpty() )
+        if ( !template.regex.isEmpty() )
         {
-            final Pattern p = Pattern.compile( regexp );
+            final Pattern p = Pattern.compile( template.regex );
             final Matcher m = p.matcher( content );
             if ( m.find() )
             {

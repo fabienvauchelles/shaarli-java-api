@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import static org.testng.AssertJUnit.*;
 import org.testng.annotations.BeforeClass;
@@ -63,9 +64,25 @@ public class ShaarliClientTest
 
         final XMLConfiguration config = new XMLConfiguration( conf );
 
-        clientUnauth = new ShaarliClient( config.getString( "shaarli.endpoint" ) );
+        // New format
+        final ShaarliTemplates templates = new ShaarliTemplates();
+        final List<HierarchicalConfiguration> cTemplates = config.configurationsAt( "shaarli.templates.template" );
+        if ( cTemplates != null )
+        {
+            for ( final HierarchicalConfiguration cTemplate : cTemplates )
+            {
+                templates.add( cTemplate.getString( "[@key]" ) ,
+                               cTemplate.getString( "[@csspath]" ) ,
+                               cTemplate.getString( "[@attribut]" ) ,
+                               cTemplate.getString( "[@regex]" ) );
+            }
+        }
 
-        clientAuth = new ShaarliClient( config.getString( "shaarli.endpoint" ) );
+        clientUnauth = new ShaarliClient( templates ,
+                                          config.getString( "shaarli.endpoint" ) );
+
+        clientAuth = new ShaarliClient( templates ,
+                                        config.getString( "shaarli.endpoint" ) );
         clientAuth.login( config.getString( "shaarli.login" ) ,
                           config.getString( "shaarli.password" ) );
     }
