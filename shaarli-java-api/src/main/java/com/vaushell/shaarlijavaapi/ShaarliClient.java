@@ -79,12 +79,13 @@ public class ShaarliClient
             throw new IllegalArgumentException();
         }
 
-        this.client = client;
         this.endpoint = cleanEnding( endpoint );
         this.df = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
                                         Locale.ENGLISH );
-        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy" ,
+        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy -" ,
                                              Locale.ENGLISH );
+
+        this.client = client;
     }
 
     /**
@@ -94,22 +95,12 @@ public class ShaarliClient
      */
     public ShaarliClient( final String endpoint )
     {
-        if ( endpoint == null )
-        {
-            throw new IllegalArgumentException();
-        }
-
-        this.endpoint = cleanEnding( endpoint );
-        this.df = new SimpleDateFormat( "yyyyMMdd_HHmmss" ,
-                                        Locale.ENGLISH );
-        this.dfPerma = new SimpleDateFormat( "EEE MMM dd HH:mm:ss yyyy -" ,
-                                             Locale.ENGLISH );
-
-        this.client = HttpClientBuilder
+        this( HttpClientBuilder
             .create()
             .setDefaultCookieStore( new BasicCookieStore() )
             .setUserAgent( "Mozilla/5.0 (Windows NT 5.1; rv:15.0) Gecko/20100101 Firefox/15.0.1" )
-            .build();
+            .build() ,
+              endpoint );
     }
 
     /**
@@ -892,9 +883,13 @@ public class ShaarliClient
                                                       "UTF-8" ,
                                                       endpoint );
 
+//                    final String countStr = extract( doc ,
+//                                                     "#pageheader div.nomobile" ,
+//                                                     "" ,
+//                                                     "\\d+" );
                     final String countStr = extract( doc ,
-                                                     "#pageheader div.nomobile" ,
-                                                     "" ,
+                                                     "form[name=searchform] input[class=medium]" ,
+                                                     "placeholder" ,
                                                      "\\d+" );
                     if ( countStr == null )
                     {
