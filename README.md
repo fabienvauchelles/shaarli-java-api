@@ -28,7 +28,8 @@ You can :
 <li>Count links ;</li>
 <li>Add a new post ;</li>
 <li>Modify an existing post ;</li>
-<li>Delete an existing post.</li>
+<li>Delete an existing post ;</li>
+<li>Define your own hooks to use a template.</li>
 </ul>
 
 ## How to use it ?
