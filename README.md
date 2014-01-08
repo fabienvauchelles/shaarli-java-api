@@ -12,7 +12,7 @@ It's <a href="http://en.wikipedia.org/wiki/KISS_principle">KISS</a>.
 
 Just a few reasons :
 <ul>
-<li>it's <b><a href="http://en.wikipedia.org/wiki/KISS_principle">KISS</a> (again, it's boring?) ;</li>
+<li>it's <b><a href="http://en.wikipedia.org/wiki/KISS_principle">KISS</a></b> (again, it's boring?) ;</li>
 <li>it's <b>fast</b> (based on Apache Http Client) ;</li>
 <li>it's <b>easy</b> to deploy with Maven ;</li>
 <li>it's <b>safe</b> (with unit tests, a code control with <a href="http://checkstyle.sourceforge.net/">Checkstyle</a>, <a href="http://pmd.sourceforge.net/">PMD</a> and <a href="http://findbugs.sourceforge.net/">Findbugs</a>) ;</li>
@@ -29,7 +29,7 @@ You can :
 <li>Add a new post ;</li>
 <li>Modify an existing post ;</li>
 <li>Delete an existing post ;</li>
-<li>Define your own hooks to use a template.</li>
+<li>Define your own hooks to use a customized Shaarli (like <a href="http://lesliensducode.com">lesliensducode.com</a>).</li>
 </ul>
 
 <h2>How to use it ?</h2>
