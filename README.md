@@ -22,9 +22,9 @@ Just a few reasons :
 
 You can :
 <ul>
-<li>Iterate all links ;</li>
-<li>Iterate links by multiple tags ;</li>
-<li>Iterate links by a term ;</li>
+<li>Iterate all links (and reverse) ;</li>
+<li>Iterate links by multiple tags (and reverse) ;</li>
+<li>Iterate links by a term (and reverse) ;</li>
 <li>Count links ;</li>
 <li>Add a new post ;</li>
 <li>Modify an existing post ;</li>

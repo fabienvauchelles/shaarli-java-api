@@ -26,6 +26,7 @@ import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -621,6 +622,22 @@ public class ShaarliClient
     }
 
     /**
+     * Reverse iterator to search all links in shaarli. Warning: ID appears only when logged.
+     *
+     * @return the iterator
+     */
+    public Iterator<ShaarliLink> searchAllReverseIterator()
+    {
+        if ( LOGGER.isDebugEnabled() )
+        {
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchAllReverseIterator()" );
+        }
+
+        return iteratorReverse( null );
+    }
+
+    /**
      * Get all page's links. Warning: ID appears only when logged.
      *
      * @param page Page number (>=1)
@@ -667,6 +684,36 @@ public class ShaarliClient
         {
             return iterator( "searchterm=" + URLEncoder.encode( term ,
                                                                 "UTF-8" ) );
+        }
+        catch( final UnsupportedEncodingException ex )
+        {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    /**
+     * Reverse iterator to search links, filter by a term. Warning: ID appears only when logged.
+     *
+     * @param term Term (must not be null)
+     * @return an iterator
+     */
+    public Iterator<ShaarliLink> searchTermReverseIterator( final String term )
+    {
+        if ( term == null )
+        {
+            throw new IllegalArgumentException();
+        }
+
+        if ( LOGGER.isDebugEnabled() )
+        {
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchTermReverseIterator() : term=" + term );
+        }
+
+        try
+        {
+            return iteratorReverse( "searchterm=" + URLEncoder.encode( term ,
+                                                                       "UTF-8" ) );
         }
         catch( final UnsupportedEncodingException ex )
         {
@@ -747,6 +794,47 @@ public class ShaarliClient
         {
             return iterator( "searchtags=" + URLEncoder.encode( sb.toString() ,
                                                                 "UTF-8" ) );
+        }
+        catch( final UnsupportedEncodingException ex )
+        {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    /**
+     * Reverse iterator to search links, filter by tags. Warning: ID appears only when logged.
+     *
+     * @param tags Tags array
+     * @return an iterator
+     */
+    public Iterator<ShaarliLink> searchTagsReverseIterator( final String... tags )
+    {
+        if ( tags == null || tags.length <= 0 )
+        {
+            throw new IllegalArgumentException();
+        }
+
+        final StringBuilder sb = new StringBuilder();
+        for ( final String tag : tags )
+        {
+            if ( sb.length() > 0 )
+            {
+                sb.append( ' ' );
+            }
+
+            sb.append( tag );
+        }
+
+        if ( LOGGER.isDebugEnabled() )
+        {
+            LOGGER.debug(
+                "[" + getClass().getSimpleName() + "] searchTagsReverseIterator() : tags=" + sb.toString() );
+        }
+
+        try
+        {
+            return iteratorReverse( "searchtags=" + URLEncoder.encode( sb.toString() ,
+                                                                       "UTF-8" ) );
         }
         catch( final UnsupportedEncodingException ex )
         {
@@ -1289,6 +1377,85 @@ public class ShaarliClient
         };
     }
 
+    private Iterator<ShaarliLink> iteratorReverse( final String query )
+    {
+        final int maxPage;
+
+        if ( query != null && query.length() > 0 )
+        {
+            maxPage = getMaxPages( endpoint + "&" + query );
+        }
+        else
+        {
+            maxPage = getMaxPages( endpoint );
+        }
+
+        return new Iterator<ShaarliLink>()
+        {
+            // PUBLIC
+            @Override
+            public boolean hasNext()
+            {
+                if ( bufferCursor < buffer.size() )
+                {
+                    return true;
+                }
+                else
+                {
+                    if ( page < 1 )
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        buffer.clear();
+                        bufferCursor = 0;
+
+                        final List<ShaarliLink> links;
+                        if ( query != null && query.length() > 0 )
+                        {
+                            links = parseLinks( endpoint + "/?page=" + ( page-- ) + "&" + query );
+                        }
+                        else
+                        {
+                            links = parseLinks( endpoint + "/?page=" + ( page-- ) );
+                        }
+
+                        if ( links.isEmpty() )
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            Collections.reverse( links );
+
+                            buffer.addAll( links );
+
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public ShaarliLink next()
+            {
+                return buffer.get( bufferCursor++ );
+            }
+
+            @Override
+            public void remove()
+            {
+                throw new UnsupportedOperationException();
+            }
+
+            // PRIVATE
+            private final List<ShaarliLink> buffer = new ArrayList<>();
+            private int bufferCursor;
+            private int page = maxPage;
+        };
+    }
+
     private static String cleanEnding( final String url )
     {
         if ( url.endsWith( "/" ) )
@@ -1395,5 +1562,72 @@ public class ShaarliClient
         }
 
         return content;
+    }
+
+    private int getMaxPages( final String query )
+    {
+        HttpEntity responseEntity = null;
+        try
+        {
+            // Exec request
+            final HttpGet get = new HttpGet( query );
+
+            try( final CloseableHttpResponse response = client.execute( get ) )
+            {
+                responseEntity = response.getEntity();
+
+                final StatusLine sl = response.getStatusLine();
+                if ( sl.getStatusCode() != 200 )
+                {
+                    throw new IOException();
+                }
+
+                try( final InputStream is = responseEntity.getContent() )
+                {
+                    final Document doc = Jsoup.parse( is ,
+                                                      "UTF-8" ,
+                                                      endpoint );
+
+                    final String maxStr = extract( doc ,
+                                                   "page-max" );
+                    if ( maxStr == null )
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            return Integer.parseInt( maxStr );
+                        }
+                        catch( final NumberFormatException ex )
+                        {
+                            return 0;
+                        }
+                    }
+                }
+            }
+        }
+        catch( final IOException ex )
+        {
+            LOGGER.error( "Cannot get max page count" ,
+                          ex );
+
+            return 0;
+        }
+        finally
+        {
+            if ( responseEntity != null )
+            {
+                try
+                {
+                    EntityUtils.consume( responseEntity );
+                }
+                catch( final IOException ex )
+                {
+                    throw new RuntimeException( ex );
+                }
+            }
+        }
     }
 }

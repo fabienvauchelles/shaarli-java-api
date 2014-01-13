@@ -131,6 +131,12 @@ public class ShaarliTemplates
              "" ,
              "" ,
              "" );
+
+        // Get page max number
+        add( "page-max" ,
+             "#paging_current" ,
+             "" ,
+             "(\\d+)$" );
     }
 
     /**

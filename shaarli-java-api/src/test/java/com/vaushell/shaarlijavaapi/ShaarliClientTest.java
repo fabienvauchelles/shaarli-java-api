@@ -274,6 +274,8 @@ public class ShaarliClientTest
                       10 ,
                       clientAuth.getLinksCount() );
 
+        clientUnauth.setLinksByPage( 3 );
+
         int num = 9;
         final Iterator<ShaarliLink> it = clientUnauth.searchAllIterator();
         while ( it.hasNext() )
@@ -300,6 +302,66 @@ public class ShaarliClientTest
                                link.getTags().toArray() );
 
             --num;
+        }
+    }
+
+    /**
+     * Test search all reverse.
+     */
+    @Test
+    public void testSearchAllReverse()
+    {
+        // Create
+        Date t = new Date();
+        for ( int i = 0 ; i < 10 ; i++ )
+        {
+            final TreeSet<String> tags = new TreeSet<>();
+            tags.add( "tagfix" );
+            tags.add( "tag" + i );
+
+            clientAuth.createOrUpdateLink( t ,
+                                           "http://fabien.vauchelles.com/" + i ,
+                                           "Blog de Fabien Vauchelles n°" + i ,
+                                           "du java quoi! #" + i ,
+                                           tags ,
+                                           false );
+
+            t = new Date( t.getTime() + 1000 );
+        }
+
+        // Check
+        assertEquals( "10 links should have been created" ,
+                      10 ,
+                      clientAuth.getLinksCount() );
+
+        clientUnauth.setLinksByPage( 3 );
+
+        int num = 0;
+        final Iterator<ShaarliLink> it = clientUnauth.searchAllReverseIterator();
+        while ( it.hasNext() )
+        {
+            final ShaarliLink link = it.next();
+
+            assertEquals( "URLs must be the same" ,
+                          "http://fabien.vauchelles.com/" + num ,
+                          link.getUrl() );
+            assertEquals( "Titles must be the same" ,
+                          "Blog de Fabien Vauchelles n°" + num ,
+                          link.getTitle() );
+            assertEquals( "Descriptions must be the same" ,
+                          "du java quoi! #" + num ,
+                          link.getDescription() );
+            assertFalse( "Link must be public" ,
+                         link.isRestricted() );
+
+            final TreeSet<String> tags = new TreeSet<>();
+            tags.add( "tagfix" );
+            tags.add( "tag" + num );
+            assertArrayEquals( "Tags must be the same" ,
+                               tags.toArray() ,
+                               link.getTags().toArray() );
+
+            ++num;
         }
     }
 
