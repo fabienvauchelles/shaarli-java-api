@@ -19,7 +19,6 @@
 
 package com.vaushell.shaarlijavaapi;
 
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,7 @@ import java.util.TreeSet;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.joda.time.DateTime;
 import static org.testng.AssertJUnit.*;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -252,7 +252,7 @@ public class ShaarliClientTest
     public void testSearchAll()
     {
         // Create
-        Date t = new Date();
+        DateTime t = new DateTime();
         for ( int i = 0 ; i < 10 ; i++ )
         {
             final TreeSet<String> tags = new TreeSet<>();
@@ -266,7 +266,7 @@ public class ShaarliClientTest
                                            tags ,
                                            false );
 
-            t = new Date( t.getTime() + 1000 );
+            t = t.plusSeconds( 1 );
         }
 
         // Check
@@ -312,7 +312,7 @@ public class ShaarliClientTest
     public void testSearchAllReverse()
     {
         // Create
-        Date t = new Date();
+        DateTime t = new DateTime();
         for ( int i = 0 ; i < 10 ; i++ )
         {
             final TreeSet<String> tags = new TreeSet<>();
@@ -326,7 +326,7 @@ public class ShaarliClientTest
                                            tags ,
                                            false );
 
-            t = new Date( t.getTime() + 1000 );
+            t = t.plusSeconds( 1 );
         }
 
         // Check
@@ -375,7 +375,7 @@ public class ShaarliClientTest
         tags.add( "java" );
         tags.add( "coding" );
 
-        Date t = new Date();
+        DateTime t = new DateTime();
         clientAuth.createOrUpdateLink( t ,
                                        "http://fabien.vauchelles.com/1" ,
                                        "Blog de Fabien Vauchelles n°1" ,
@@ -383,7 +383,7 @@ public class ShaarliClientTest
                                        tags ,
                                        false );
 
-        t = new Date( t.getTime() + 1000 );
+        t = t.plusSeconds( 1 );
         final TreeSet<String> tags2 = new TreeSet<>();
         tags2.add( "java" );
         tags2.add( "coding" );
@@ -419,7 +419,7 @@ public class ShaarliClientTest
         tags.add( "java" );
         tags.add( "coding" );
 
-        Date t = new Date();
+        DateTime t = new DateTime();
         clientAuth.createOrUpdateLink( t ,
                                        "http://fabien.vauchelles.com/1" ,
                                        "Blog de Fabien Vauchelles n°1" ,
@@ -427,7 +427,7 @@ public class ShaarliClientTest
                                        tags ,
                                        false );
 
-        t = new Date( t.getTime() + 1000 );
+        t = t.plusSeconds( 1 );
         final TreeSet<String> tags2 = new TreeSet<>();
         tags2.add( "coding" );
         tags2.add( "blogging" );
@@ -510,7 +510,7 @@ public class ShaarliClientTest
     public void testSetLinksByPage()
     {
         // Create
-        Date t = new Date();
+        DateTime t = new DateTime();
         for ( int i = 0 ; i < 10 ; i++ )
         {
             final TreeSet<String> tags = new TreeSet<>();
@@ -524,7 +524,7 @@ public class ShaarliClientTest
                                            tags ,
                                            false );
 
-            t = new Date( t.getTime() + 1000 );
+            t = t.plusSeconds( 1 );
         }
 
         for ( int i = 1 ; i <= 10 ; i++ )

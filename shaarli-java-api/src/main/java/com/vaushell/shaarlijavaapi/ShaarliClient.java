@@ -23,11 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -50,6 +47,10 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -87,6 +88,9 @@ public class ShaarliClient
         this.client = client;
 
         this.templates = templates;
+
+        this.fmt = DateTimeFormat.forPattern( templates.get( "id-dateformat" ).cssPath );
+        this.fmtPerma = DateTimeFormat.forPattern( templates.get( "permalink-dateformat" ).cssPath );
     }
 
     /**
@@ -213,7 +217,7 @@ public class ShaarliClient
      * @param restricted Is the link private ?
      * @return id Link's ID (no way to detect if created or not! Use getLinksCount())
      */
-    public String createOrUpdateLink( final Date ID ,
+    public String createOrUpdateLink( final DateTime ID ,
                                       final String url ,
                                       final String title ,
                                       final String description ,
@@ -373,7 +377,7 @@ public class ShaarliClient
      * @param ID Link's id (not the permalink id. Don't be confuse!)
      * @return deleted or not
      */
-    public boolean delete( final Date ID )
+    public boolean delete( final DateTime ID )
     {
         if ( ID == null )
         {
@@ -1043,7 +1047,7 @@ public class ShaarliClient
      * @param date the Date ID
      * @return the String ID
      */
-    public String convertIDdateToString( final Date date )
+    public String convertIDdateToString( final DateTime date )
     {
         if ( date == null )
         {
@@ -1051,8 +1055,7 @@ public class ShaarliClient
         }
         else
         {
-            return new SimpleDateFormat( templates.get( "id-dateformat" ).cssPath ,
-                                         Locale.ENGLISH ).format( date );
+            return fmt.print( date );
         }
     }
 
@@ -1062,7 +1065,7 @@ public class ShaarliClient
      * @param ID the String ID
      * @return the Date ID
      */
-    public Date convertIDstringToDate( final String ID )
+    public DateTime convertIDstringToDate( final String ID )
     {
         if ( ID == null )
         {
@@ -1072,10 +1075,9 @@ public class ShaarliClient
         {
             try
             {
-                return new SimpleDateFormat( templates.get( "id-dateformat" ).cssPath ,
-                                             Locale.ENGLISH ).parse( ID );
+                return fmt.parseDateTime( ID );
             }
-            catch( final ParseException ex )
+            catch( final IllegalArgumentException ex )
             {
                 return null;
             }
@@ -1087,6 +1089,8 @@ public class ShaarliClient
     private final CloseableHttpClient client;
     private final String endpoint;
     private final ShaarliTemplates templates;
+    private final DateTimeFormatter fmt;
+    private final DateTimeFormatter fmtPerma;
 
     private String getToken( final String execURL )
         throws IOException
@@ -1229,11 +1233,9 @@ public class ShaarliClient
                                 {
                                     try
                                     {
-                                        ID = convertIDdateToString( new SimpleDateFormat(
-                                            templates.get( "permalink-dateformat" ).cssPath ,
-                                            Locale.ENGLISH ).parse( dateStr ) );
+                                        ID = convertIDdateToString( fmtPerma.parseDateTime( dateStr ) );
                                     }
-                                    catch( final ParseException ex )
+                                    catch( final IllegalArgumentException ex )
                                     {
                                         ID = null;
                                     }
@@ -1469,35 +1471,39 @@ public class ShaarliClient
         }
     }
 
-    private Long lastGeneratedDate;
+    private DateTime lastGeneratedDate;
 
-    private Date generateDateID()
+    private DateTime generateDateID()
     {
         synchronized( this )
         {
+            DateTime now = new DateTime();
+
             if ( lastGeneratedDate != null )
             {
-                long diff = System.currentTimeMillis() - lastGeneratedDate;
-                while ( diff < 1000 )
+                Duration diff = new Duration( lastGeneratedDate ,
+                                              now );
+                while ( diff.getMillis() < 1000L )
                 {
                     try
                     {
                         // It's better than a Thread.sleep in a synchronized block
-                        wait( 1000 - diff );
+                        wait( 1000L - diff.getMillis() );
                     }
                     catch( final InterruptedException ex )
                     {
                         // Ignore
                     }
 
-                    diff = System.currentTimeMillis() - lastGeneratedDate;
+                    now = new DateTime();
+                    diff = new Duration( lastGeneratedDate ,
+                                         now );
                 }
             }
 
-            final Date t = new Date();
-            lastGeneratedDate = t.getTime();
+            lastGeneratedDate = now;
 
-            return t;
+            return lastGeneratedDate;
         }
     }
 

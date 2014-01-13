@@ -20,10 +20,10 @@
 package com.vaushell.shaarlijavaapi;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeSet;
+import org.joda.time.DateTime;
 
 /**
  * Shaarli client usage examples.
@@ -138,7 +138,7 @@ public final class Examples
             tags.add( "coding" );
 
             // Create 10 links
-            Date t = new Date();
+            DateTime t = new DateTime();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 client.createOrUpdateLink( t ,
@@ -148,7 +148,7 @@ public final class Examples
                                            tags ,
                                            false );
 
-                t = new Date( t.getTime() + 1000 );
+                t = t.plusSeconds( 1 );
             }
 
             // Get all tags
@@ -181,7 +181,7 @@ public final class Examples
             tags.add( "coding" );
 
             // Create 10 links
-            Date t = new Date();
+            DateTime t = new DateTime();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 client.createOrUpdateLink( t ,
@@ -191,7 +191,7 @@ public final class Examples
                                            tags ,
                                            false );
 
-                t = new Date( t.getTime() + 1000 );
+                t = t.plusSeconds( 1 );
             }
 
             // Iterate all links (without restriction)
@@ -227,7 +227,7 @@ public final class Examples
             tags.add( "coding" );
 
             // Create 10 links
-            Date t = new Date();
+            DateTime t = new DateTime();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 client.createOrUpdateLink( t ,
@@ -237,7 +237,7 @@ public final class Examples
                                            tags ,
                                            false );
 
-                t = new Date( t.getTime() + 1000 );
+                t = t.plusSeconds( 1 );
             }
 
             // Show only 2 links by page
@@ -268,7 +268,7 @@ public final class Examples
             }
 
             // Create 10 links
-            Date t = new Date();
+            DateTime t = new DateTime();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 final TreeSet<String> tags = new TreeSet<>();
@@ -282,7 +282,7 @@ public final class Examples
                                            tags ,
                                            false );
 
-                t = new Date( t.getTime() + 1000 );
+                t = t.plusSeconds( 1 );
             }
 
             // Iterate all links (with tags filter)
@@ -313,7 +313,7 @@ public final class Examples
             }
 
             // Create 10 links
-            Date t = new Date();
+            DateTime t = new DateTime();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 final TreeSet<String> tags = new TreeSet<>();
@@ -327,7 +327,7 @@ public final class Examples
                                            tags ,
                                            false );
 
-                t = new Date( t.getTime() + 1000 );
+                t = t.plusSeconds( 1 );
             }
 
             // Show only 2 links by page
@@ -359,7 +359,7 @@ public final class Examples
             }
 
             // Create 10 links
-            Date t = new Date();
+            DateTime t = new DateTime();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 final TreeSet<String> tags = new TreeSet<>();
@@ -373,7 +373,7 @@ public final class Examples
                                            tags ,
                                            false );
 
-                t = new Date( t.getTime() + 1000 );
+                t = t.plusSeconds( 1 );
             }
 
             // Iterate all links (with tags filter)
@@ -405,7 +405,7 @@ public final class Examples
             }
 
             // Create 10 links
-            Date t = new Date();
+            DateTime t = new DateTime();
             for ( int i = 0 ; i < 10 ; ++i )
             {
                 final TreeSet<String> tags = new TreeSet<>();
@@ -419,7 +419,7 @@ public final class Examples
                                            tags ,
                                            false );
 
-                t = new Date( t.getTime() + 1000 );
+                t = t.plusSeconds( 1 );
             }
 
             // Show only 2 links by page
